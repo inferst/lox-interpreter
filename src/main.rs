@@ -21,12 +21,30 @@ fn main() {
         });
 
         // Uncomment this block to pass the first stage
-        if file_contents.is_empty() {
-            println!("EOF  null"); // Placeholder, remove this line when implementing the scanner
-        } else {
-            panic!("Scanner not implemented");
-        }
+        tokenize(&file_contents);
     } else {
         eprintln!("Unknown command: {command}");
+    }
+}
+
+fn tokenize(content: &str) {
+    if content.is_empty() {
+        println!("EOF  null");
+    } else {
+        let chars = content.chars();
+
+        for char in chars {
+            match char {
+                ')' => {
+                    println!("RIGHT_PAREN ) null");
+                }
+                '(' => {
+                    println!("LEFT_PAREN ( null");
+                }
+                _other => {}
+            }
+        }
+
+        println!("EOF  null");
     }
 }
