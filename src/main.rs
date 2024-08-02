@@ -1,3 +1,4 @@
+use core::fmt;
 use std::env;
 use std::fs;
 
@@ -27,22 +28,69 @@ fn main() {
     }
 }
 
+struct Token {
+    r#type: TokenType,
+    text: String,
+}
+
+enum TokenType {
+    RightParen,
+    RightBrace,
+    LeftParen,
+    LeftBrace,
+}
+
+impl fmt::Display for TokenType {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            TokenType::RightBrace => {
+                fmt.write_str("RIGHT_BRACE").unwrap();
+            }
+            TokenType::LeftBrace => {
+                fmt.write_str("LEFT_BRACE").unwrap();
+            }
+            TokenType::RightParen => {
+                fmt.write_str("RIGHT_PAREN").unwrap();
+            }
+            TokenType::LeftParen => {
+                fmt.write_str("LEFT_PAREN").unwrap();
+            }
+        }
+        Ok(())
+    }
+}
+
 fn tokenize(content: &str) {
     if content.is_empty() {
         println!("EOF  null");
     } else {
         let chars = content.chars();
+        let mut tokens = vec![];
 
         for char in chars {
             match char {
-                ')' => {
-                    println!("RIGHT_PAREN ) null");
-                }
-                '(' => {
-                    println!("LEFT_PAREN ( null");
-                }
+                ')' => tokens.push(Token {
+                    r#type: TokenType::RightParen,
+                    text: char.to_string(),
+                }),
+                '(' => tokens.push(Token {
+                    r#type: TokenType::LeftParen,
+                    text: char.to_string(),
+                }),
+                '}' => tokens.push(Token {
+                    r#type: TokenType::RightBrace,
+                    text: char.to_string(),
+                }),
+                '{' => tokens.push(Token {
+                    r#type: TokenType::LeftBrace,
+                    text: char.to_string(),
+                }),
                 _other => {}
             }
+        }
+
+        for token in tokens {
+            println!("{} {} null", token.r#type, token.text);
         }
 
         println!("EOF  null");
