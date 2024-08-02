@@ -61,38 +61,34 @@ impl fmt::Display for TokenType {
 }
 
 fn tokenize(content: &str) {
-    if content.is_empty() {
-        println!("EOF  null");
-    } else {
-        let chars = content.chars();
-        let mut tokens = vec![];
+    let chars = content.chars();
+    let mut tokens = vec![];
 
-        for char in chars {
-            match char {
-                ')' => tokens.push(Token {
-                    r#type: TokenType::RightParen,
-                    text: char.to_string(),
-                }),
-                '(' => tokens.push(Token {
-                    r#type: TokenType::LeftParen,
-                    text: char.to_string(),
-                }),
-                '}' => tokens.push(Token {
-                    r#type: TokenType::RightBrace,
-                    text: char.to_string(),
-                }),
-                '{' => tokens.push(Token {
-                    r#type: TokenType::LeftBrace,
-                    text: char.to_string(),
-                }),
-                _other => {}
-            }
+    for char in chars {
+        match char {
+            ')' => tokens.push(Token {
+                r#type: TokenType::RightParen,
+                text: char.to_string(),
+            }),
+            '(' => tokens.push(Token {
+                r#type: TokenType::LeftParen,
+                text: char.to_string(),
+            }),
+            '}' => tokens.push(Token {
+                r#type: TokenType::RightBrace,
+                text: char.to_string(),
+            }),
+            '{' => tokens.push(Token {
+                r#type: TokenType::LeftBrace,
+                text: char.to_string(),
+            }),
+            _other => {}
         }
-
-        for token in tokens {
-            println!("{} {} null", token.r#type, token.text);
-        }
-
-        println!("EOF  null");
     }
+
+    for token in tokens {
+        println!("{} {} null", token.r#type, token.text);
+    }
+
+    println!("EOF  null");
 }
