@@ -1,6 +1,10 @@
-use core::fmt;
 use std::env;
 use std::fs;
+
+use token::Token;
+use token::Type;
+
+mod token;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -28,38 +32,6 @@ fn main() {
     }
 }
 
-struct Token {
-    r#type: TokenType,
-    text: String,
-}
-
-enum TokenType {
-    RightParen,
-    RightBrace,
-    LeftParen,
-    LeftBrace,
-}
-
-impl fmt::Display for TokenType {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            TokenType::RightBrace => {
-                fmt.write_str("RIGHT_BRACE").unwrap();
-            }
-            TokenType::LeftBrace => {
-                fmt.write_str("LEFT_BRACE").unwrap();
-            }
-            TokenType::RightParen => {
-                fmt.write_str("RIGHT_PAREN").unwrap();
-            }
-            TokenType::LeftParen => {
-                fmt.write_str("LEFT_PAREN").unwrap();
-            }
-        }
-        Ok(())
-    }
-}
-
 fn tokenize(content: &str) {
     let chars = content.chars();
     let mut tokens = vec![];
@@ -67,19 +39,47 @@ fn tokenize(content: &str) {
     for char in chars {
         match char {
             ')' => tokens.push(Token {
-                r#type: TokenType::RightParen,
+                r#type: Type::RightParen,
                 text: char.to_string(),
             }),
             '(' => tokens.push(Token {
-                r#type: TokenType::LeftParen,
+                r#type: Type::LeftParen,
                 text: char.to_string(),
             }),
             '}' => tokens.push(Token {
-                r#type: TokenType::RightBrace,
+                r#type: Type::RightBrace,
                 text: char.to_string(),
             }),
             '{' => tokens.push(Token {
-                r#type: TokenType::LeftBrace,
+                r#type: Type::LeftBrace,
+                text: char.to_string(),
+            }),
+            '*' => tokens.push(Token {
+                r#type: Type::Star,
+                text: char.to_string(),
+            }),
+            '.' => tokens.push(Token {
+                r#type: Type::Dot,
+                text: char.to_string(),
+            }),
+            ',' => tokens.push(Token {
+                r#type: Type::Comma,
+                text: char.to_string(),
+            }),
+            '+' => tokens.push(Token {
+                r#type: Type::Plus,
+                text: char.to_string(),
+            }),
+            '-' => tokens.push(Token {
+                r#type: Type::Minus,
+                text: char.to_string(),
+            }),
+            ';' => tokens.push(Token {
+                r#type: Type::Semicolon,
+                text: char.to_string(),
+            }),
+            '/' => tokens.push(Token {
+                r#type: Type::Slash,
                 text: char.to_string(),
             }),
             _other => {}
