@@ -5,6 +5,11 @@ pub struct Token {
     pub text: String,
 }
 
+pub struct Invalid {
+    pub text: String,
+    pub line: u128,
+}
+
 pub enum Type {
     RightParen,
     RightBrace,

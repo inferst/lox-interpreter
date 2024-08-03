@@ -1,10 +1,8 @@
 use std::env;
 use std::fs;
 
-use token::Token;
-use token::Type;
-
 mod token;
+mod tokenize;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -26,69 +24,8 @@ fn main() {
         });
 
         // Uncomment this block to pass the first stage
-        tokenize(&file_contents);
+        tokenize::tokenize(&file_contents);
     } else {
         eprintln!("Unknown command: {command}");
     }
-}
-
-fn tokenize(content: &str) {
-    let chars = content.chars();
-    let mut tokens = vec![];
-
-    for char in chars {
-        match char {
-            ')' => tokens.push(Token {
-                r#type: Type::RightParen,
-                text: char.to_string(),
-            }),
-            '(' => tokens.push(Token {
-                r#type: Type::LeftParen,
-                text: char.to_string(),
-            }),
-            '}' => tokens.push(Token {
-                r#type: Type::RightBrace,
-                text: char.to_string(),
-            }),
-            '{' => tokens.push(Token {
-                r#type: Type::LeftBrace,
-                text: char.to_string(),
-            }),
-            '*' => tokens.push(Token {
-                r#type: Type::Star,
-                text: char.to_string(),
-            }),
-            '.' => tokens.push(Token {
-                r#type: Type::Dot,
-                text: char.to_string(),
-            }),
-            ',' => tokens.push(Token {
-                r#type: Type::Comma,
-                text: char.to_string(),
-            }),
-            '+' => tokens.push(Token {
-                r#type: Type::Plus,
-                text: char.to_string(),
-            }),
-            '-' => tokens.push(Token {
-                r#type: Type::Minus,
-                text: char.to_string(),
-            }),
-            ';' => tokens.push(Token {
-                r#type: Type::Semicolon,
-                text: char.to_string(),
-            }),
-            '/' => tokens.push(Token {
-                r#type: Type::Slash,
-                text: char.to_string(),
-            }),
-            _other => {}
-        }
-    }
-
-    for token in tokens {
-        println!("{} {} null", token.r#type, token.text);
-    }
-
-    println!("EOF  null");
 }
