@@ -1,67 +1,94 @@
-use crate::token::Invalid;
-use crate::token::Token;
-use crate::token::Type;
+use std::{iter::Peekable, str::Chars};
+
+use crate::token::{Invalid, Tokens, Type};
+
+pub fn exact_match(exact: &str, chars: &mut Peekable<Chars>) -> usize {
+    let mut found = String::new();
+    let len = exact.len();
+
+    while let Some(next) = chars.peek() {
+        if found.len() >= len {
+            break;
+        }
+
+        found.push(*next);
+    }
+
+    if found.eq(exact) {
+        found.len()
+    } else {
+        0
+    }
+}
 
 pub fn tokenize(content: &str) {
-    let chars = content.chars();
-    let mut tokens = vec![];
+    let mut chars = content.chars().peekable();
+    let mut tokens = Tokens::new();
     let mut invalid_tokens = vec![];
 
     let mut line = 1;
+    let mut offset = 0;
 
-    for char in chars {
+    while let Some(char) = chars.nth(offset) {
+        offset = 0;
+
         match char {
-            ')' => tokens.push(Token {
-                r#type: Type::RightParen,
-                text: char.to_string(),
-            }),
-            '(' => tokens.push(Token {
-                r#type: Type::LeftParen,
-                text: char.to_string(),
-            }),
-            '}' => tokens.push(Token {
-                r#type: Type::RightBrace,
-                text: char.to_string(),
-            }),
-            '{' => tokens.push(Token {
-                r#type: Type::LeftBrace,
-                text: char.to_string(),
-            }),
-            '*' => tokens.push(Token {
-                r#type: Type::Star,
-                text: char.to_string(),
-            }),
-            '.' => tokens.push(Token {
-                r#type: Type::Dot,
-                text: char.to_string(),
-            }),
-            ',' => tokens.push(Token {
-                r#type: Type::Comma,
-                text: char.to_string(),
-            }),
-            '+' => tokens.push(Token {
-                r#type: Type::Plus,
-                text: char.to_string(),
-            }),
-            '-' => tokens.push(Token {
-                r#type: Type::Minus,
-                text: char.to_string(),
-            }),
-            ';' => tokens.push(Token {
-                r#type: Type::Semicolon,
-                text: char.to_string(),
-            }),
-            '/' => tokens.push(Token {
-                r#type: Type::Slash,
-                text: char.to_string(),
-            }),
+            ')' => tokens.add(Type::RightParen, char.to_string()),
+            '(' => tokens.add(Type::LeftParen, char.to_string()),
+            '}' => tokens.add(Type::RightBrace, char.to_string()),
+            '{' => tokens.add(Type::LeftBrace, char.to_string()),
+            '*' => tokens.add(Type::Star, char.to_string()),
+            '.' => tokens.add(Type::Dot, char.to_string()),
+            ',' => tokens.add(Type::Comma, char.to_string()),
+            '+' => tokens.add(Type::Plus, char.to_string()),
+            '-' => tokens.add(Type::Minus, char.to_string()),
+            ';' => tokens.add(Type::Semicolon, char.to_string()),
+            '/' => tokens.add(Type::Slash, char.to_string()),
+            '!' => {
+                offset = exact_match("=", &mut chars);
+
+                if offset > 0 {
+                    tokens.add(Type::BangEqual, "!=".to_string());
+                } else {
+                    tokens.add(Type::Bang, "!".to_string());
+                }
+            }
+            '=' => {
+                offset = exact_match("=", &mut chars);
+
+                if offset > 0 {
+                    tokens.add(Type::EqualEqual, "==".to_string());
+                } else {
+                    tokens.add(Type::Equal, "=".to_string());
+                }
+            }
+            '<' => {
+                offset = exact_match("=", &mut chars);
+
+                if offset > 0 {
+                    tokens.add(Type::LessEqual, "<=".to_string());
+                } else {
+                    tokens.add(Type::Less, "<".to_string());
+                }
+            }
+            '>' => {
+                offset = exact_match("=", &mut chars);
+
+                if offset > 0 {
+                    tokens.add(Type::GreaterEqual, ">=".to_string());
+                } else {
+                    tokens.add(Type::Greater, ">".to_string());
+                }
+            }
             '\n' => {
                 line += 1;
             }
-            _other => invalid_tokens.push(Invalid {
-                text: char.to_string(),
-                line,
-            }),
+            _other => {
+                invalid_tokens.push(Invalid {
+                    text: char.to_string(),
+                    line,
+                });
+            }
         }
     }
 
@@ -72,7 +99,7 @@ pub fn tokenize(content: &str) {
         );
     }
 
-    for token in tokens {
+    for token in tokens.tokens() {
         println!("{} {} null", token.r#type, token.text);
     }
 
