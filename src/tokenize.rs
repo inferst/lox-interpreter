@@ -33,6 +33,7 @@ pub fn tokenize(content: &str) {
                 if next_match('/', &mut chars) {
                     for val in &mut chars.by_ref() {
                         if val == '\n' {
+                            line += 1;
                             break;
                         }
                     }
