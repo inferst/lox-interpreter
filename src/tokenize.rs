@@ -10,9 +10,119 @@ fn next_match(char: char, chars: &mut Peekable<Chars>) -> bool {
     false
 }
 
-#[allow(clippy::too_many_lines)]
+fn string(
+    char: char,
+    chars: &mut Peekable<Chars>,
+    line: &mut usize,
+) -> Result<(String, String), TokenError> {
+    let mut text = String::from(char);
+    let mut value = String::new();
+
+    while let Some(next) = chars.next() {
+        text.push(next);
+
+        if next == '\n' {
+            *line += 1;
+        }
+
+        if next == '"' {
+            value = text[1..text.len() - 1].to_string();
+            break;
+        }
+
+        if chars.peek().is_none() {
+            return Err(TokenError {
+                text: "Unterminated string.".to_string(),
+                line: *line,
+            });
+        }
+    }
+
+    Ok((text, value))
+}
+
+fn number(char: char, chars: &mut Peekable<Chars>) -> (String, String) {
+    let mut value = String::from(char);
+
+    while let Some(peek) = chars.peek() {
+        if peek.is_ascii_digit() {
+            value.push(*peek);
+            chars.next();
+        } else {
+            break;
+        }
+    }
+
+    if let Some(next) = chars.peek() {
+        if *next == '.' {
+            let mut cloned = chars.clone();
+            cloned.next();
+
+            if let Some(peek) = cloned.peek() {
+                if peek.is_ascii_digit() {
+                    chars.next();
+                    value.push('.');
+
+                    while let Some(next) = chars.peek() {
+                        if next.is_ascii_digit() {
+                            value.push(*next);
+                            chars.next();
+                        } else {
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    let text = value.clone();
+
+    let float = value
+        .parse::<f64>()
+        .expect("Number token should be parsed into float");
+
+    let mut value = float.to_string();
+
+    if !value.contains('.') {
+        value.push_str(".0");
+    }
+
+    (text, value)
+}
+
+pub fn comment(chars: &mut Peekable<Chars>) {
+    while let Some(next) = chars.peek() {
+        if *next == '\n' {
+            break;
+        }
+
+        chars.next();
+    }
+}
+
+pub fn is_alpha_numeric(char: char) -> bool {
+    matches!(char, 'a'..='z' | 'A'..='Z' | '_' | '0'..='9')
+}
+
+pub fn identifier(char: char, chars: &mut Peekable<Chars>) -> String {
+    let mut value = String::from(char);
+
+    while let Some(peek) = chars.peek() {
+        if !is_alpha_numeric(*peek) {
+            break;
+        }
+
+        value.push(*peek);
+        chars.next();
+    }
+
+    value
+}
+
 pub fn tokenize(content: &str) {
     let mut chars = content.chars().peekable();
+
     let mut tokens = Tokens::new();
 
     let mut errors: Vec<TokenError> = vec![];
@@ -33,13 +143,7 @@ pub fn tokenize(content: &str) {
             ';' => tokens.add(Type::Semicolon, char.to_string(), None),
             '/' => {
                 if next_match('/', &mut chars) {
-                    while let Some(next) = chars.peek() {
-                        if *next == '\n' {
-                            break;
-                        }
-
-                        chars.next();
-                    }
+                    comment(&mut chars);
                 } else {
                     tokens.add(Type::Slash, char.to_string(), None);
                 }
@@ -72,79 +176,23 @@ pub fn tokenize(content: &str) {
                     tokens.add(Type::Greater, ">".to_string(), None);
                 }
             }
-            '"' => {
-                let mut str = String::from('"');
-
-                while let Some(next) = chars.next() {
-                    str.push(next);
-
-                    if next == '\n' {
-                        line += 1;
-                    }
-
-                    if next == '"' {
-                        let end = str.len() - 1;
-                        let value = &str.clone()[1..end];
-                        tokens.add(Type::String, str, Some(value.to_string()));
-                        break;
-                    }
-
-                    if chars.peek().is_none() {
-                        errors.push(TokenError {
-                            text: "Unterminated string.".to_string(),
-                            line,
-                        });
-                    }
-                }
-            }
+            '"' => match string(char, &mut chars, &mut line) {
+                Ok((text, value)) => tokens.add(Type::String, text, Some(value)),
+                Err(error) => errors.push(error),
+            },
             '0'..='9' => {
-                let mut str = String::from(char);
-
-                while let Some(peek) = chars.peek() {
-                    if peek.is_ascii_digit() {
-                        str.push(*peek);
-                        chars.next();
-                    } else {
-                        break;
-                    }
-                }
-
-                if let Some(next) = chars.peek() {
-                    if *next == '.' {
-                        let mut cloned = chars.clone();
-                        cloned.next();
-
-                        if let Some(peek) = cloned.peek() {
-                            if peek.is_ascii_digit() {
-                                chars.next();
-                                str.push('.');
-
-                                while let Some(next) = chars.peek() {
-                                    if next.is_ascii_digit() {
-                                        str.push(*next);
-                                        chars.next();
-                                    } else {
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                let text = str.clone();
-
-                if !str.contains('.') {
-                    str.push_str(".0");
-                }
-
-                tokens.add(Type::Number, text, Some(str));
+                let (text, value) = number(char, &mut chars);
+                tokens.add(Type::Number, text, Some(value));
+            }
+            'a'..='z' | 'A'..='Z' | '_' => {
+                let text = identifier(char, &mut chars);
+                tokens.add(Type::Identifier, text, None);
             }
             ' ' | '\t' => {}
             '\n' => {
                 line += 1;
             }
-            _other => {
+            _ => {
                 errors.push(TokenError {
                     text: format!("Unexpected character: {char}"),
                     line,
