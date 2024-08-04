@@ -31,11 +31,12 @@ pub fn tokenize(content: &str) {
             ';' => tokens.add(Type::Semicolon, char.to_string()),
             '/' => {
                 if next_match('/', &mut chars) {
-                    for val in &mut chars.by_ref() {
-                        if val == '\n' {
-                            line += 1;
+                    while let Some(next) = chars.peek() {
+                        if *next == '\n' {
                             break;
                         }
+
+                        chars.next();
                     }
                 } else {
                     tokens.add(Type::Slash, char.to_string());
@@ -69,7 +70,7 @@ pub fn tokenize(content: &str) {
                     tokens.add(Type::Greater, ">".to_string());
                 }
             }
-            ' ' | '\t' => {},
+            ' ' | '\t' => {}
             '\n' => {
                 line += 1;
             }
