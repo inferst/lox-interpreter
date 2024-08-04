@@ -2,23 +2,12 @@ use std::{iter::Peekable, str::Chars};
 
 use crate::token::{Invalid, Tokens, Type};
 
-pub fn exact_match(exact: &str, chars: &mut Peekable<Chars>) -> usize {
-    let mut found = String::new();
-    let len = exact.len();
-
-    while let Some(next) = chars.peek() {
-        if found.len() >= len {
-            break;
-        }
-
-        found.push(*next);
+fn next_match(char: char, chars: &mut Peekable<Chars>) -> bool {
+    if chars.next_if_eq(&char).is_some() {
+        return true;
     }
 
-    if found.eq(exact) {
-        found.len()
-    } else {
-        0
-    }
+    false
 }
 
 pub fn tokenize(content: &str) {
@@ -27,11 +16,8 @@ pub fn tokenize(content: &str) {
     let mut invalid_tokens = vec![];
 
     let mut line = 1;
-    let mut offset = 0;
 
-    while let Some(char) = chars.nth(offset) {
-        offset = 0;
-
+    while let Some(char) = chars.next() {
         match char {
             ')' => tokens.add(Type::RightParen, char.to_string()),
             '(' => tokens.add(Type::LeftParen, char.to_string()),
@@ -45,36 +31,28 @@ pub fn tokenize(content: &str) {
             ';' => tokens.add(Type::Semicolon, char.to_string()),
             '/' => tokens.add(Type::Slash, char.to_string()),
             '!' => {
-                offset = exact_match("=", &mut chars);
-
-                if offset > 0 {
+                if next_match('=', &mut chars) {
                     tokens.add(Type::BangEqual, "!=".to_string());
                 } else {
                     tokens.add(Type::Bang, "!".to_string());
                 }
             }
             '=' => {
-                offset = exact_match("=", &mut chars);
-
-                if offset > 0 {
+                if next_match('=', &mut chars) {
                     tokens.add(Type::EqualEqual, "==".to_string());
                 } else {
                     tokens.add(Type::Equal, "=".to_string());
                 }
             }
             '<' => {
-                offset = exact_match("=", &mut chars);
-
-                if offset > 0 {
+                if next_match('=', &mut chars) {
                     tokens.add(Type::LessEqual, "<=".to_string());
                 } else {
                     tokens.add(Type::Less, "<".to_string());
                 }
             }
             '>' => {
-                offset = exact_match("=", &mut chars);
-
-                if offset > 0 {
+                if next_match('=', &mut chars) {
                     tokens.add(Type::GreaterEqual, ">=".to_string());
                 } else {
                     tokens.add(Type::Greater, ">".to_string());
