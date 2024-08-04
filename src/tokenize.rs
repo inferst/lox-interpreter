@@ -1,6 +1,31 @@
-use std::{iter::Peekable, str::Chars};
+use std::{collections::HashMap, iter::Peekable, str::Chars, sync::OnceLock};
 
 use crate::token::{TokenError, Tokens, Type};
+
+pub static KEYWORDS: OnceLock<HashMap<&str, Type>> = OnceLock::new();
+
+fn keywords() -> &'static HashMap<&'static str, Type> {
+    KEYWORDS.get_or_init(|| {
+        let mut map = HashMap::new();
+        map.insert("and", Type::And);
+        map.insert("class", Type::Class);
+        map.insert("else", Type::Else);
+        map.insert("false", Type::False);
+        map.insert("for", Type::For);
+        map.insert("fun", Type::Fun);
+        map.insert("if", Type::If);
+        map.insert("nil", Type::Nil);
+        map.insert("or", Type::Or);
+        map.insert("print", Type::Print);
+        map.insert("return", Type::Return);
+        map.insert("super", Type::Super);
+        map.insert("this", Type::This);
+        map.insert("true", Type::True);
+        map.insert("var", Type::Var);
+        map.insert("while", Type::While);
+        map
+    })
+}
 
 fn next_match(char: char, chars: &mut Peekable<Chars>) -> bool {
     if chars.next_if_eq(&char).is_some() {
@@ -186,7 +211,13 @@ pub fn tokenize(content: &str) {
             }
             'a'..='z' | 'A'..='Z' | '_' => {
                 let text = identifier(char, &mut chars);
-                tokens.add(Type::Identifier, text, None);
+                let keyword = keywords().get(text.as_str());
+
+                if let Some(token_type) = keyword {
+                    tokens.add(token_type.clone(), text, None);
+                } else {
+                    tokens.add(Type::Identifier, text, None);
+                }
             }
             ' ' | '\t' => {}
             '\n' => {

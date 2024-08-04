@@ -33,7 +33,9 @@ pub struct Token {
     pub value: Option<String>,
 }
 
+#[derive(Clone)]
 pub enum Type {
+    // Single-character tokens
     RightParen,
     RightBrace,
     LeftParen,
@@ -45,6 +47,8 @@ pub enum Type {
     Minus,
     Semicolon,
     Slash,
+
+    // One or two character tokens
     Bang,
     BangEqual,
     Equal,
@@ -53,11 +57,32 @@ pub enum Type {
     LessEqual,
     Greater,
     GreaterEqual,
+
+    // Literals
     String,
     Number,
     Identifier,
+
+    // Keywords
+    And,
+    Class,
+    Else,
+    False,
+    For,
+    Fun,
+    If,
+    Nil,
+    Or,
+    Print,
+    Return,
+    Super,
+    This,
+    True,
+    Var,
+    While,
 }
 
+#[allow(clippy::too_many_lines)]
 impl fmt::Display for Type {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         match self {
@@ -126,6 +151,54 @@ impl fmt::Display for Type {
             }
             Type::Identifier => {
                 fmt.write_str("IDENTIFIER").unwrap();
+            }
+            Type::And => {
+                fmt.write_str("AND").unwrap();
+            }
+            Type::Class => {
+                fmt.write_str("CLASS").unwrap();
+            }
+            Type::Else => {
+                fmt.write_str("ELSE").unwrap();
+            }
+            Type::False => {
+                fmt.write_str("FALSE").unwrap();
+            }
+            Type::For => {
+                fmt.write_str("FOR").unwrap();
+            }
+            Type::Fun => {
+                fmt.write_str("FUN").unwrap();
+            }
+            Type::If => {
+                fmt.write_str("IF").unwrap();
+            }
+            Type::Nil => {
+                fmt.write_str("NIL").unwrap();
+            }
+            Type::Or => {
+                fmt.write_str("OR").unwrap();
+            }
+            Type::Print => {
+                fmt.write_str("PRINT").unwrap();
+            }
+            Type::Return => {
+                fmt.write_str("RETURN").unwrap();
+            }
+            Type::Super => {
+                fmt.write_str("SUPER").unwrap();
+            }
+            Type::This => {
+                fmt.write_str("THIS").unwrap();
+            }
+            Type::True => {
+                fmt.write_str("TRUE").unwrap();
+            }
+            Type::Var => {
+                fmt.write_str("VAR").unwrap();
+            }
+            Type::While => {
+                fmt.write_str("WHILE").unwrap();
             }
         }
         Ok(())
