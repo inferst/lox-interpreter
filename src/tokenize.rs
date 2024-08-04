@@ -29,7 +29,17 @@ pub fn tokenize(content: &str) {
             '+' => tokens.add(Type::Plus, char.to_string()),
             '-' => tokens.add(Type::Minus, char.to_string()),
             ';' => tokens.add(Type::Semicolon, char.to_string()),
-            '/' => tokens.add(Type::Slash, char.to_string()),
+            '/' => {
+                if next_match('/', &mut chars) {
+                    for val in &mut chars.by_ref() {
+                        if val == '\n' {
+                            break;
+                        }
+                    }
+                } else {
+                    tokens.add(Type::Slash, char.to_string());
+                }
+            }
             '!' => {
                 if next_match('=', &mut chars) {
                     tokens.add(Type::BangEqual, "!=".to_string());
