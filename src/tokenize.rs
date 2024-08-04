@@ -68,6 +68,7 @@ pub fn tokenize(content: &str) {
                     tokens.add(Type::Greater, ">".to_string());
                 }
             }
+            ' ' | '\t' => {},
             '\n' => {
                 line += 1;
             }
