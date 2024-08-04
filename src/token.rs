@@ -54,6 +54,7 @@ pub enum Type {
     Greater,
     GreaterEqual,
     String,
+    Number,
 }
 
 impl fmt::Display for Type {
@@ -118,6 +119,9 @@ impl fmt::Display for Type {
             }
             Type::String => {
                 fmt.write_str("STRING").unwrap();
+            }
+            Type::Number => {
+                fmt.write_str("NUMBER").unwrap();
             }
         }
         Ok(())

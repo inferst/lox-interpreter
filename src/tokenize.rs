@@ -97,6 +97,49 @@ pub fn tokenize(content: &str) {
                     }
                 }
             }
+            '0'..='9' => {
+                let mut str = String::from(char);
+
+                while let Some(peek) = chars.peek() {
+                    if peek.is_ascii_digit() {
+                        str.push(*peek);
+                        chars.next();
+                    } else {
+                        break;
+                    }
+                }
+
+                if let Some(next) = chars.peek() {
+                    if *next == '.' {
+                        let mut cloned = chars.clone();
+                        cloned.next();
+
+                        if let Some(peek) = cloned.peek() {
+                            if peek.is_ascii_digit() {
+                                chars.next();
+                                str.push('.');
+
+                                while let Some(next) = chars.peek() {
+                                    if next.is_ascii_digit() {
+                                        str.push(*next);
+                                        chars.next();
+                                    } else {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                let text = str.clone();
+
+                if !str.contains('.') {
+                    str.push_str(".0");
+                }
+
+                tokens.add(Type::Number, text, Some(str));
+            }
             ' ' | '\t' => {}
             '\n' => {
                 line += 1;
