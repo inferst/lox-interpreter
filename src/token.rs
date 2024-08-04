@@ -9,8 +9,12 @@ impl Tokens {
         Tokens { tokens: vec![] }
     }
 
-    pub fn add(&mut self, r#type: Type, text: String) {
-        self.tokens.push(Token { r#type, text });
+    pub fn add(&mut self, token_type: Type, text: String, value: Option<String>) {
+        self.tokens.push(Token {
+            token_type,
+            text,
+            value,
+        });
     }
 
     pub fn tokens(&self) -> &Vec<Token> {
@@ -18,14 +22,15 @@ impl Tokens {
     }
 }
 
-pub struct Token {
-    pub r#type: Type,
+pub struct TokenError {
+    pub line: usize,
     pub text: String,
 }
 
-pub struct Invalid {
+pub struct Token {
+    pub token_type: Type,
     pub text: String,
-    pub line: usize,
+    pub value: Option<String>,
 }
 
 pub enum Type {
@@ -48,6 +53,7 @@ pub enum Type {
     LessEqual,
     Greater,
     GreaterEqual,
+    String,
 }
 
 impl fmt::Display for Type {
@@ -109,6 +115,9 @@ impl fmt::Display for Type {
             }
             Type::GreaterEqual => {
                 fmt.write_str("GREATER_EQUAL").unwrap();
+            }
+            Type::String => {
+                fmt.write_str("STRING").unwrap();
             }
         }
         Ok(())
