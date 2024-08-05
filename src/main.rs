@@ -1,8 +1,7 @@
 use std::env;
 use std::fs;
 
-mod token;
-mod tokenize;
+mod scanner;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -24,7 +23,7 @@ fn main() {
         });
 
         // Uncomment this block to pass the first stage
-        tokenize::tokenize(&file_contents);
+        scanner::scan_tokens(&file_contents);
     } else {
         eprintln!("Unknown command: {command}");
     }
