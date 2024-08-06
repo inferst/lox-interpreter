@@ -1,6 +1,7 @@
 use std::env;
 use std::fs;
 
+mod parser;
 mod scanner;
 
 fn main() {
@@ -13,18 +14,39 @@ fn main() {
     let command = &args[1];
     let filename = &args[2];
 
-    if "tokenize" == command.as_str() {
-        // You can use print statements as follows for debugging, they'll be visible when running tests.
-        eprintln!("Logs from your program will appear here!");
+    let file_contents = fs::read_to_string(filename).unwrap_or_else(|_| {
+        eprintln!("Failed to read file {filename}");
+        String::new()
+    });
 
-        let file_contents = fs::read_to_string(filename).unwrap_or_else(|_| {
-            eprintln!("Failed to read file {filename}");
-            String::new()
-        });
+    match command.as_str() {
+        "tokenize" => {
+            // You can use print statements as follows for debugging, they'll be visible when running tests.
+            eprintln!("Logs from your program will appear here!");
 
-        // Uncomment this block to pass the first stage
-        scanner::scan_tokens(&file_contents);
-    } else {
-        eprintln!("Unknown command: {command}");
+            let scan_tokens = scanner::scan_tokens(&file_contents);
+
+            for error in &scan_tokens.errors {
+                eprintln!("[line {}] Error: {}", error.line, error.message);
+            }
+
+            for token in scan_tokens.tokens {
+                let value = token.literal.unwrap_or("null".to_string());
+                println!("{} {} {}", token.r#type, token.lexeme, value);
+            }
+
+            println!("EOF  null");
+
+            if !scan_tokens.errors.is_empty() {
+                std::process::exit(65);
+            }
+        }
+        "parse" => {
+            let scan_tokens = scanner::scan_tokens(&file_contents);
+            parser::parse_tokens(scan_tokens.tokens);
+        }
+        _ => {
+            eprintln!("Unknown command: {command}");
+        }
     }
 }

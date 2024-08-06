@@ -11,11 +11,13 @@ pub struct Token {
     pub literal: Option<String>,
 }
 
-pub fn new(r#type: Type, text: &str, value: Option<String>) -> Token {
-    Token {
-        r#type,
-        lexeme: text.to_string(),
-        literal: value,
+impl Token {
+    pub fn new(r#type: Type, text: &str, value: Option<String>) -> Token {
+        Token {
+            r#type,
+            lexeme: text.to_string(),
+            literal: value,
+        }
     }
 }
 
