@@ -64,7 +64,15 @@ impl fmt::Display for Expr {
             Self::True => write!(fmt, "true"),
             Self::False => write!(fmt, "false"),
             Self::Nil => write!(fmt, "nil"),
-            Self::Number(value) => write!(fmt, "{value}"),
+            Self::Number(number) => {
+                let mut value = number.to_string();
+
+                if !value.contains('.') {
+                    value.push_str(".0");
+                }
+
+                write!(fmt, "{value}")
+            }
             _ => write!(fmt, "aboba"),
         }
     }
