@@ -64,6 +64,7 @@ impl fmt::Display for Expr {
             Self::True => write!(fmt, "true"),
             Self::False => write!(fmt, "false"),
             Self::Nil => write!(fmt, "nil"),
+            Self::Number(value) => write!(fmt, "{value}"),
             _ => write!(fmt, "aboba"),
         }
     }
@@ -82,6 +83,10 @@ pub fn parse_tokens(tokens: Vec<Token>) -> String {
             }
             Type::Nil => {
                 tree.push_str(&format!("{}", Expr::Nil));
+            }
+            Type::Number => {
+                let value = token.lexeme.parse::<f64>().unwrap();
+                tree.push_str(&format!("{}", Expr::Number(value)));
             }
             _ => {
                 tree.push_str("aboba");
