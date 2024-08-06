@@ -75,6 +75,7 @@ impl fmt::Display for Expr {
             }
             Self::String(string) => write!(fmt, "{string}"),
             Self::Grouping(expr) => write!(fmt, "(group {expr})"),
+            Self::Unary(operator, expr) => write!(fmt, "({operator} {expr})"),
             _ => write!(fmt, "aboba"),
         }
     }
@@ -110,6 +111,14 @@ where
                 }
 
                 return Expr::String(String::new());
+            }
+            Type::Bang => {
+                let expr = parse_tokens(tokens);
+                return Expr::Unary(UnaryOperator::Bang, Box::new(expr));
+            }
+            Type::Minus => {
+                let expr = parse_tokens(tokens);
+                return Expr::Unary(UnaryOperator::Minus, Box::new(expr));
             }
             Type::LeftParen => {
                 let expr = parse_tokens(tokens);
