@@ -1,85 +1,8 @@
-use core::fmt;
+use std::iter::Peekable;
 
 use crate::scanner::{Token, Type};
 
-pub enum UnaryOperator {
-    Bang,
-    Minus,
-}
-
-impl fmt::Display for UnaryOperator {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Self::Bang => write!(fmt, "!"),
-            Self::Minus => write!(fmt, "-"),
-        }
-    }
-}
-
-pub enum BinaryOperator {
-    BangEqual,
-    EqualEqual,
-    Less,
-    LessEqual,
-    Greater,
-    GreaterEqual,
-    Star,
-    Plus,
-    Minus,
-    Slash,
-}
-
-impl fmt::Display for BinaryOperator {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Self::BangEqual => write!(fmt, "!="),
-            Self::EqualEqual => write!(fmt, "=="),
-            Self::Less => write!(fmt, "<"),
-            Self::LessEqual => write!(fmt, "<="),
-            Self::Greater => write!(fmt, ">"),
-            Self::GreaterEqual => write!(fmt, ">="),
-            Self::Star => write!(fmt, "*"),
-            Self::Plus => write!(fmt, "+"),
-            Self::Minus => write!(fmt, "-"),
-            Self::Slash => write!(fmt, "/"),
-        }
-    }
-}
-
-pub enum Expr {
-    True,
-    False,
-    Nil,
-    String(String),
-    Number(f64),
-    Unary(UnaryOperator, Box<Expr>),
-    Binary(Box<Expr>, BinaryOperator, Box<Expr>),
-    Operator(BinaryOperator),
-    Grouping(Box<Expr>),
-}
-
-impl fmt::Display for Expr {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Self::True => write!(fmt, "true"),
-            Self::False => write!(fmt, "false"),
-            Self::Nil => write!(fmt, "nil"),
-            Self::Number(number) => {
-                let mut value = number.to_string();
-
-                if !value.contains('.') {
-                    value.push_str(".0");
-                }
-
-                write!(fmt, "{value}")
-            }
-            Self::String(string) => write!(fmt, "{string}"),
-            Self::Grouping(expr) => write!(fmt, "(group {expr})"),
-            Self::Unary(operator, expr) => write!(fmt, "({operator} {expr})"),
-            _ => write!(fmt, "aboba"),
-        }
-    }
-}
+use super::expr::{BinaryOperator, Expr, UnaryOperator};
 
 fn check_token_type(token: Option<&Token>, token_type: &Type) -> bool {
     if let Some(next) = token {
@@ -90,54 +13,91 @@ fn check_token_type(token: Option<&Token>, token_type: &Type) -> bool {
     false
 }
 
-pub fn parse_tokens<'a, I>(tokens: &mut I) -> Expr
+fn next_type_match<'a, I>(types: &Vec<Type>, tokens: &mut Peekable<I>) -> Option<Type>
 where
     I: Iterator<Item = &'a Token>,
 {
-    if let Some(token) = tokens.next() {
-        return match token.r#type {
-            Type::True => Expr::True,
-            Type::False => Expr::False,
-            Type::Nil => Expr::Nil,
-            Type::Number => {
-                let value = token.lexeme.parse::<f64>().unwrap();
-                return Expr::Number(value);
-            }
-            Type::String => {
-                let string = &token.literal;
+    let peek = tokens.peek();
 
-                if let Some(string) = string {
-                    return Expr::String(string.to_string());
-                }
+    if let Some(peek) = peek {
+        let peek = *peek;
 
-                return Expr::String(String::new());
+        for ty in types {
+            if *ty == peek.r#type {
+                tokens.next();
+                return Some(ty.clone());
             }
-            Type::Bang => {
-                let expr = parse_tokens(tokens);
-                return Expr::Unary(UnaryOperator::Bang, Box::new(expr));
-            }
-            Type::Minus => {
-                let expr = parse_tokens(tokens);
-                return Expr::Unary(UnaryOperator::Minus, Box::new(expr));
-            }
-            Type::LeftParen => {
-                let expr = parse_tokens(tokens);
-                let next = tokens.next();
+        }
+    }
 
-                if !check_token_type(next, &Type::RightParen) {
-                    eprintln!("Error: Unmatched parentheses.");
-                    std::process::exit(65);
-                }
+    None
+}
 
-                return Expr::Grouping(Box::new(expr));
-            }
-            _ => {
+pub fn unary<'a, I>(tokens: &mut Peekable<I>) -> Expr
+where
+    I: Iterator<Item = &'a Token>,
+{
+    if let Some(ty) = next_type_match(&vec![Type::Bang, Type::Minus], tokens) {
+        let right = unary(tokens);
+        let operator: UnaryOperator = ty.into();
+
+        return Expr::Unary(operator, Box::new(right));
+    }
+
+    primary(tokens)
+}
+
+pub fn primary<'a, I>(tokens: &mut Peekable<I>) -> Expr
+where
+    I: Iterator<Item = &'a Token>,
+{
+    let token = tokens.next().unwrap();
+
+    match token.r#type {
+        Type::True => Expr::True,
+        Type::False => Expr::False,
+        Type::Nil => Expr::Nil,
+        Type::Number => {
+            let value = token.lexeme.parse::<f64>().unwrap();
+            Expr::Number(value)
+        }
+        Type::String => {
+            let literal = &token.literal;
+            let string = literal.clone().unwrap();
+            Expr::String(string.to_string())
+        }
+        Type::LeftParen => {
+            let expr = parse_tokens(tokens);
+            let next = tokens.next();
+
+            if !check_token_type(next, &Type::RightParen) {
                 eprintln!("Error: Unmatched parentheses.");
                 std::process::exit(65);
             }
-        };
+
+            Expr::Grouping(Box::new(expr))
+        }
+        _ => {
+            eprintln!("Error: Unknown token type.");
+            std::process::exit(65);
+        }
+    }
+}
+
+pub fn parse_tokens<'a, I>(tokens: &mut Peekable<I>) -> Expr
+where
+    I: Iterator<Item = &'a Token>,
+{
+    let mut expr = unary(tokens);
+
+    while let Some(ty) = next_type_match(&vec![Type::Star, Type::Slash], tokens) {
+        let left = expr;
+        let right = unary(tokens);
+
+        let operator: BinaryOperator = ty.into();
+
+        expr = Expr::Binary(operator, Box::new(left), Box::new(right));
     }
 
-    eprintln!("Error: Unmatched parentheses.");
-    std::process::exit(65);
+    expr
 }
