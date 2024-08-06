@@ -21,7 +21,7 @@ impl Token {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub enum Type {
     // Single-character tokens
     RightParen,

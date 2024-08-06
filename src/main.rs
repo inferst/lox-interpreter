@@ -43,7 +43,7 @@ fn main() {
         }
         "parse" => {
             let scan_tokens = scanner::scan_tokens(&file_contents);
-            let tree = parser::parse_tokens(scan_tokens.tokens);
+            let tree = parser::parse_tokens(&mut scan_tokens.tokens.iter());
 
             println!("{tree}");
         }

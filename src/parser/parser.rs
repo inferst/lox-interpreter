@@ -74,38 +74,61 @@ impl fmt::Display for Expr {
                 write!(fmt, "{value}")
             }
             Self::String(string) => write!(fmt, "{string}"),
+            Self::Grouping(expr) => write!(fmt, "(group {expr})"),
             _ => write!(fmt, "aboba"),
         }
     }
 }
 
-pub fn parse_tokens(tokens: Vec<Token>) -> String {
-    let mut tree = String::new();
-
-    for token in tokens {
-        match token.r#type {
-            Type::True => {
-                tree.push_str(&format!("{}", Expr::True));
-            }
-            Type::False => {
-                tree.push_str(&format!("{}", Expr::False));
-            }
-            Type::Nil => {
-                tree.push_str(&format!("{}", Expr::Nil));
-            }
-            Type::Number => {
-                let value = token.lexeme.parse::<f64>().unwrap();
-                tree.push_str(&format!("{}", Expr::Number(value)));
-            }
-            Type::String => {
-                let string = token.literal.unwrap();
-                tree.push_str(&format!("{}", Expr::String(string)));
-            }
-            _ => {
-                tree.push_str("aboba");
-            }
+fn check_token_type(token: Option<&Token>, token_type: &Type) -> bool {
+    if let Some(next) = token {
+        if next.r#type == *token_type {
+            return true;
         }
     }
+    false
+}
 
-    tree
+pub fn parse_tokens<'a, I>(tokens: &mut I) -> Expr
+where
+    I: Iterator<Item = &'a Token>,
+{
+    if let Some(token) = tokens.next() {
+        return match token.r#type {
+            Type::True => Expr::True,
+            Type::False => Expr::False,
+            Type::Nil => Expr::Nil,
+            Type::Number => {
+                let value = token.lexeme.parse::<f64>().unwrap();
+                return Expr::Number(value);
+            }
+            Type::String => {
+                let string = &token.literal;
+
+                if let Some(string) = string {
+                    return Expr::String(string.to_string());
+                }
+
+                return Expr::String(String::new());
+            }
+            Type::LeftParen => {
+                let expr = parse_tokens(tokens);
+                let next = tokens.next();
+
+                if !check_token_type(next, &Type::RightParen) {
+                    eprintln!("Error: Unmatched parentheses.");
+                    std::process::exit(65);
+                }
+
+                return Expr::Grouping(Box::new(expr));
+            }
+            _ => {
+                eprintln!("Error: Unmatched parentheses.");
+                std::process::exit(65);
+            }
+        };
+    }
+
+    eprintln!("Error: Unmatched parentheses.");
+    std::process::exit(65);
 }
