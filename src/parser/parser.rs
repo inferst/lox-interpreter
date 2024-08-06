@@ -73,6 +73,7 @@ impl fmt::Display for Expr {
 
                 write!(fmt, "{value}")
             }
+            Self::String(string) => write!(fmt, "{string}"),
             _ => write!(fmt, "aboba"),
         }
     }
@@ -95,6 +96,10 @@ pub fn parse_tokens(tokens: Vec<Token>) -> String {
             Type::Number => {
                 let value = token.lexeme.parse::<f64>().unwrap();
                 tree.push_str(&format!("{}", Expr::Number(value)));
+            }
+            Type::String => {
+                let string = token.literal.unwrap();
+                tree.push_str(&format!("{}", Expr::String(string)));
             }
             _ => {
                 tree.push_str("aboba");
