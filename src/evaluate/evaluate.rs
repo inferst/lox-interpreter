@@ -67,8 +67,8 @@ pub fn evaluate(expr: &Expr) -> Literal {
                 },
                 (Literal::Number(_), Literal::String(_))
                 | (Literal::String(_), Literal::Number(_)) => match *operator {
-                    BinaryOperator::Star | BinaryOperator::Slash => std::process::exit(70),
-                    _ => Literal::Boolean(false),
+                    BinaryOperator::EqualEqual | BinaryOperator::BangEqual => Literal::Boolean(false),
+                    _ => std::process::exit(70),
                 },
                 (Literal::Boolean(left), Literal::Boolean(right)) => match *operator {
                     BinaryOperator::EqualEqual => Literal::Boolean(left == right),
