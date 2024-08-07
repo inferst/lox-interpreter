@@ -52,12 +52,11 @@ pub fn evaluate(expr: &Expr) -> Literal {
                     BinaryOperator::Slash => Literal::Number(left / right),
                     BinaryOperator::Plus => Literal::Number(left + right),
                     BinaryOperator::Minus => Literal::Number(left - right),
-                    BinaryOperator::BangEqual => todo!(),
-                    BinaryOperator::EqualEqual => todo!(),
-                    BinaryOperator::Less => todo!(),
-                    BinaryOperator::LessEqual => todo!(),
-                    BinaryOperator::Greater => todo!(),
-                    BinaryOperator::GreaterEqual => todo!(),
+                    _ => todo!(),
+                },
+                (Literal::String(left), Literal::String(right)) => match *operator {
+                    BinaryOperator::Plus => Literal::String(format!("{left}{right}")),
+                    _ => todo!(),
                 },
                 _ => panic!("aboba"),
             }
