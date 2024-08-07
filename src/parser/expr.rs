@@ -85,7 +85,6 @@ pub enum Expr {
     Number(f64),
     Unary(UnaryOperator, Box<Expr>),
     Binary(BinaryOperator, Box<Expr>, Box<Expr>),
-    //Operator(BinaryOperator),
     Grouping(Box<Expr>),
 }
 

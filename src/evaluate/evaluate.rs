@@ -38,7 +38,7 @@ pub fn evaluate(expr: &Expr) -> Literal {
                 },
                 UnaryOperator::Minus => match literal {
                     Literal::Number(number) => Literal::Number(-number),
-                    _ => panic!("aboba"),
+                    _ => std::process::exit(70),
                 },
             }
         }
@@ -63,16 +63,16 @@ pub fn evaluate(expr: &Expr) -> Literal {
                     BinaryOperator::Plus => Literal::String(format!("{left}{right}")),
                     BinaryOperator::EqualEqual => Literal::Boolean(left == right),
                     BinaryOperator::BangEqual => Literal::Boolean(left != right),
-                    _ => todo!(),
+                    _ => std::process::exit(70),
                 },
                 (Literal::Number(_), Literal::String(_))
                 | (Literal::String(_), Literal::Number(_)) => Literal::Boolean(false),
                 (Literal::Boolean(left), Literal::Boolean(right)) => match *operator {
                     BinaryOperator::EqualEqual => Literal::Boolean(left == right),
                     BinaryOperator::BangEqual => Literal::Boolean(left != right),
-                    _ => todo!(),
+                    _ => std::process::exit(70),
                 },
-                _ => panic!("aboba"),
+                _ => std::process::exit(70),
             }
         }
         Expr::Grouping(expr) => evaluate(expr),
