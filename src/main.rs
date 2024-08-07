@@ -1,6 +1,7 @@
 use std::env;
 use std::fs;
 
+mod evaluate;
 mod parser;
 mod scanner;
 mod utils;
@@ -47,6 +48,13 @@ fn main() {
             let tree = parser::parse_tokens(&scan_tokens.tokens);
 
             println!("{tree}");
+        }
+        "evaluate" => {
+            let scan_tokens = scanner::scan_tokens(&file_contents);
+            let tree = parser::parse_tokens(&scan_tokens.tokens);
+            let result = evaluate::evaluate(&tree);
+
+            println!("{result}");
         }
         _ => {
             eprintln!("Unknown command: {command}");
