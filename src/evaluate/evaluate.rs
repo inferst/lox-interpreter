@@ -56,10 +56,20 @@ pub fn evaluate(expr: &Expr) -> Literal {
                     BinaryOperator::GreaterEqual => Literal::Boolean(left >= right),
                     BinaryOperator::Less => Literal::Boolean(left < right),
                     BinaryOperator::LessEqual => Literal::Boolean(left <= right),
-                    _ => todo!(),
+                    BinaryOperator::EqualEqual => Literal::Boolean(left.eq(&right)),
+                    BinaryOperator::BangEqual => Literal::Boolean(left.ne(&right)),
                 },
                 (Literal::String(left), Literal::String(right)) => match *operator {
                     BinaryOperator::Plus => Literal::String(format!("{left}{right}")),
+                    BinaryOperator::EqualEqual => Literal::Boolean(left == right),
+                    BinaryOperator::BangEqual => Literal::Boolean(left != right),
+                    _ => todo!(),
+                },
+                (Literal::Number(_), Literal::String(_))
+                | (Literal::String(_), Literal::Number(_)) => Literal::Boolean(false),
+                (Literal::Boolean(left), Literal::Boolean(right)) => match *operator {
+                    BinaryOperator::EqualEqual => Literal::Boolean(left == right),
+                    BinaryOperator::BangEqual => Literal::Boolean(left != right),
                     _ => todo!(),
                 },
                 _ => panic!("aboba"),
