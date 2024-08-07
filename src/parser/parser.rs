@@ -85,7 +85,7 @@ where
     }
 }
 
-fn expression<'a, I>(tokens: &mut Peekable<I>) -> Expr
+fn factor<'a, I>(tokens: &mut Peekable<I>) -> Expr
 where
     I: Iterator<Item = &'a Token>,
 {
@@ -101,6 +101,31 @@ where
     }
 
     expr
+}
+
+fn term<'a, I>(tokens: &mut Peekable<I>) -> Expr
+where
+    I: Iterator<Item = &'a Token>,
+{
+    let mut expr = factor(tokens);
+
+    while let Some(r#type) = next_type_match(&vec![Type::Minus, Type::Plus], tokens) {
+        let left = expr;
+        let right = factor(tokens);
+
+        let operator: BinaryOperator = r#type.into();
+
+        expr = Expr::Binary(operator, Box::new(left), Box::new(right));
+    }
+
+    expr
+}
+
+fn expression<'a, I>(tokens: &mut Peekable<I>) -> Expr
+where
+    I: Iterator<Item = &'a Token>,
+{
+    term(tokens)
 }
 
 pub fn parse_tokens(tokens: &[Token]) -> Expr {
