@@ -50,14 +50,14 @@ pub fn evaluate(expr: &Expr) -> Literal {
                 (Literal::Number(left), Literal::Number(right)) => match *operator {
                     BinaryOperator::Star => Literal::Number(left * right),
                     BinaryOperator::Slash => Literal::Number(left / right),
+                    BinaryOperator::Plus => Literal::Number(left + right),
+                    BinaryOperator::Minus => Literal::Number(left - right),
                     BinaryOperator::BangEqual => todo!(),
                     BinaryOperator::EqualEqual => todo!(),
                     BinaryOperator::Less => todo!(),
                     BinaryOperator::LessEqual => todo!(),
                     BinaryOperator::Greater => todo!(),
                     BinaryOperator::GreaterEqual => todo!(),
-                    BinaryOperator::Plus => todo!(),
-                    BinaryOperator::Minus => todo!(),
                 },
                 _ => panic!("aboba"),
             }
