@@ -9,6 +9,6 @@ pub fn evaluate(expr: &Expr) -> String {
         Expr::Number(number) => number.to_string(),
         Expr::Unary(_, _) => todo!(),
         Expr::Binary(_, _, _) => todo!(),
-        Expr::Grouping(_) => todo!(),
+        Expr::Grouping(expr) => evaluate(expr),
     }
 }
