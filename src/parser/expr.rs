@@ -1,6 +1,6 @@
 use core::fmt;
 
-use crate::scanner::Type;
+use crate::{scanner::Type, utils::pad_number};
 
 #[derive(Clone)]
 pub enum UnaryOperator {
@@ -89,21 +89,13 @@ pub enum Expr {
     Grouping(Box<Expr>),
 }
 
-fn pad(number: f64) -> String {
-    let mut value = number.to_string();
-    if !value.contains('.') {
-        value.push_str(".0");
-    }
-    value
-}
-
 impl fmt::Display for Expr {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Self::True => write!(fmt, "true"),
             Self::False => write!(fmt, "false"),
             Self::Nil => write!(fmt, "nil"),
-            Self::Number(number) => write!(fmt, "{}", pad(*number)),
+            Self::Number(number) => write!(fmt, "{}", pad_number(*number)),
             Self::String(string) => write!(fmt, "{string}"),
             Self::Grouping(expr) => write!(fmt, "(group {expr})"),
             Self::Unary(operator, expr) => write!(fmt, "({operator} {expr})"),

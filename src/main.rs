@@ -3,6 +3,7 @@ use std::fs;
 
 mod parser;
 mod scanner;
+mod utils;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -43,7 +44,7 @@ fn main() {
         }
         "parse" => {
             let scan_tokens = scanner::scan_tokens(&file_contents);
-            let tree = parser::parse_tokens(&mut scan_tokens.tokens.iter().peekable());
+            let tree = parser::parse_tokens(&scan_tokens.tokens);
 
             println!("{tree}");
         }

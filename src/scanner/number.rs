@@ -1,5 +1,7 @@
 use std::{iter::Peekable, str::Chars};
 
+use crate::utils::pad_number;
+
 pub fn scan(char: char, chars: &mut Peekable<Chars>) -> (String, String) {
     let mut value = String::from(char);
 
@@ -41,11 +43,7 @@ pub fn scan(char: char, chars: &mut Peekable<Chars>) -> (String, String) {
         .parse::<f64>()
         .expect("Number token should be parsed into float");
 
-    let mut value = float.to_string();
-
-    if !value.contains('.') {
-        value.push_str(".0");
-    }
+    let value = pad_number(float);
 
     (text, value)
 }

@@ -4,15 +4,6 @@ use crate::scanner::{Token, Type};
 
 use super::expr::{BinaryOperator, Expr, UnaryOperator};
 
-fn check_token_type(token: Option<&Token>, token_type: &Type) -> bool {
-    if let Some(next) = token {
-        if next.r#type == *token_type {
-            return true;
-        }
-    }
-    false
-}
-
 fn next_type_match<'a, I>(types: &Vec<Type>, tokens: &mut Peekable<I>) -> Option<Type>
 where
     I: Iterator<Item = &'a Token>,
@@ -22,10 +13,10 @@ where
     if let Some(peek) = peek {
         let peek = *peek;
 
-        for ty in types {
-            if *ty == peek.r#type {
+        for r#type in types {
+            if *r#type == peek.r#type {
                 tokens.next();
-                return Some(ty.clone());
+                return Some(r#type.clone());
             }
         }
     }
@@ -33,13 +24,13 @@ where
     None
 }
 
-pub fn unary<'a, I>(tokens: &mut Peekable<I>) -> Expr
+fn unary<'a, I>(tokens: &mut Peekable<I>) -> Expr
 where
     I: Iterator<Item = &'a Token>,
 {
-    if let Some(ty) = next_type_match(&vec![Type::Bang, Type::Minus], tokens) {
+    if let Some(r#type) = next_type_match(&vec![Type::Bang, Type::Minus], tokens) {
         let right = unary(tokens);
-        let operator: UnaryOperator = ty.into();
+        let operator: UnaryOperator = r#type.into();
 
         return Expr::Unary(operator, Box::new(right));
     }
@@ -47,7 +38,18 @@ where
     primary(tokens)
 }
 
-pub fn primary<'a, I>(tokens: &mut Peekable<I>) -> Expr
+fn next_token_type_match<'a, I>(r#type: &Type, tokens: &mut Peekable<I>) -> bool
+where
+    I: Iterator<Item = &'a Token>,
+{
+    if tokens.next_if(|token| token.r#type.eq(r#type)).is_some() {
+        return true;
+    }
+
+    false
+}
+
+fn primary<'a, I>(tokens: &mut Peekable<I>) -> Expr
 where
     I: Iterator<Item = &'a Token>,
 {
@@ -67,10 +69,9 @@ where
             Expr::String(string.to_string())
         }
         Type::LeftParen => {
-            let expr = parse_tokens(tokens);
-            let next = tokens.next();
+            let expr = expression(tokens);
 
-            if !check_token_type(next, &Type::RightParen) {
+            if !next_token_type_match(&Type::RightParen, tokens) {
                 eprintln!("Error: Unmatched parentheses.");
                 std::process::exit(65);
             }
@@ -78,26 +79,30 @@ where
             Expr::Grouping(Box::new(expr))
         }
         _ => {
-            eprintln!("Error: Unknown token type.");
+            eprintln!("Error: Unmatched parentheses.");
             std::process::exit(65);
         }
     }
 }
 
-pub fn parse_tokens<'a, I>(tokens: &mut Peekable<I>) -> Expr
+fn expression<'a, I>(tokens: &mut Peekable<I>) -> Expr
 where
     I: Iterator<Item = &'a Token>,
 {
     let mut expr = unary(tokens);
 
-    while let Some(ty) = next_type_match(&vec![Type::Star, Type::Slash], tokens) {
+    while let Some(r#type) = next_type_match(&vec![Type::Star, Type::Slash], tokens) {
         let left = expr;
         let right = unary(tokens);
 
-        let operator: BinaryOperator = ty.into();
+        let operator: BinaryOperator = r#type.into();
 
         expr = Expr::Binary(operator, Box::new(left), Box::new(right));
     }
 
     expr
+}
+
+pub fn parse_tokens(tokens: &[Token]) -> Expr {
+    expression(&mut tokens.iter().peekable())
 }
