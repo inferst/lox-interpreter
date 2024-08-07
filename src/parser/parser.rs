@@ -147,11 +147,29 @@ where
     expr
 }
 
+fn equality<'a, I>(tokens: &mut Peekable<I>) -> Expr
+where
+    I: Iterator<Item = &'a Token>,
+{
+    let mut expr = comparison(tokens);
+
+    while let Some(r#type) = next_type_match(&vec![Type::EqualEqual, Type::BangEqual], tokens) {
+        let left = expr;
+        let right = comparison(tokens);
+
+        let operator: BinaryOperator = r#type.into();
+
+        expr = Expr::Binary(operator, Box::new(left), Box::new(right));
+    }
+
+    expr
+}
+
 fn expression<'a, I>(tokens: &mut Peekable<I>) -> Expr
 where
     I: Iterator<Item = &'a Token>,
 {
-    comparison(tokens)
+    equality(tokens)
 }
 
 pub fn parse_tokens(tokens: &[Token]) -> Expr {
