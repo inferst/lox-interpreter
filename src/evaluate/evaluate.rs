@@ -1,6 +1,6 @@
 use core::fmt;
 
-use crate::parser::{Expr, UnaryOperator};
+use crate::parser::{BinaryOperator, Expr, UnaryOperator};
 
 pub enum Literal {
     Boolean(bool),
@@ -28,7 +28,6 @@ pub fn evaluate(expr: &Expr) -> Literal {
         Expr::String(string) => Literal::String(string.clone()),
         Expr::Number(number) => Literal::Number(*number),
         Expr::Unary(operator, expr) => {
-            let expr = expr.as_ref();
             let literal = evaluate(expr);
             match operator {
                 UnaryOperator::Bang => match literal {
@@ -43,7 +42,26 @@ pub fn evaluate(expr: &Expr) -> Literal {
                 },
             }
         }
-        Expr::Binary(_, _, _) => todo!(),
+        Expr::Binary(operator, left, right) => {
+            let left = evaluate(left);
+            let right = evaluate(right);
+
+            match (left, right) {
+                (Literal::Number(left), Literal::Number(right)) => match *operator {
+                    BinaryOperator::Star => Literal::Number(left * right),
+                    BinaryOperator::Slash => Literal::Number(left / right),
+                    BinaryOperator::BangEqual => todo!(),
+                    BinaryOperator::EqualEqual => todo!(),
+                    BinaryOperator::Less => todo!(),
+                    BinaryOperator::LessEqual => todo!(),
+                    BinaryOperator::Greater => todo!(),
+                    BinaryOperator::GreaterEqual => todo!(),
+                    BinaryOperator::Plus => todo!(),
+                    BinaryOperator::Minus => todo!(),
+                },
+                _ => panic!("aboba"),
+            }
+        }
         Expr::Grouping(expr) => evaluate(expr),
     }
 }
