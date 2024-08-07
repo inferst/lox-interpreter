@@ -52,6 +52,10 @@ pub fn evaluate(expr: &Expr) -> Literal {
                     BinaryOperator::Slash => Literal::Number(left / right),
                     BinaryOperator::Plus => Literal::Number(left + right),
                     BinaryOperator::Minus => Literal::Number(left - right),
+                    BinaryOperator::Greater => Literal::Boolean(left > right),
+                    BinaryOperator::GreaterEqual => Literal::Boolean(left >= right),
+                    BinaryOperator::Less => Literal::Boolean(left < right),
+                    BinaryOperator::LessEqual => Literal::Boolean(left <= right),
                     _ => todo!(),
                 },
                 (Literal::String(left), Literal::String(right)) => match *operator {
