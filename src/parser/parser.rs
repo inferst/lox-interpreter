@@ -53,35 +53,38 @@ fn primary<'a, I>(tokens: &mut Peekable<I>) -> Expr
 where
     I: Iterator<Item = &'a Token>,
 {
-    let token = tokens.next().unwrap();
+    if let Some(token) = tokens.next() {
+        match token.r#type {
+            Type::True => Expr::True,
+            Type::False => Expr::False,
+            Type::Nil => Expr::Nil,
+            Type::Number => {
+                let value = token.lexeme.parse::<f64>().unwrap();
+                Expr::Number(value)
+            }
+            Type::String => {
+                let literal = &token.literal;
+                let string = literal.clone().unwrap();
+                Expr::String(string.to_string())
+            }
+            Type::LeftParen => {
+                let expr = expression(tokens);
 
-    match token.r#type {
-        Type::True => Expr::True,
-        Type::False => Expr::False,
-        Type::Nil => Expr::Nil,
-        Type::Number => {
-            let value = token.lexeme.parse::<f64>().unwrap();
-            Expr::Number(value)
-        }
-        Type::String => {
-            let literal = &token.literal;
-            let string = literal.clone().unwrap();
-            Expr::String(string.to_string())
-        }
-        Type::LeftParen => {
-            let expr = expression(tokens);
+                if !next_token_type_match(&Type::RightParen, tokens) {
+                    eprintln!("Error: Unmatched parentheses.");
+                    std::process::exit(65);
+                }
 
-            if !next_token_type_match(&Type::RightParen, tokens) {
+                Expr::Grouping(Box::new(expr))
+            }
+            _ => {
                 eprintln!("Error: Unmatched parentheses.");
                 std::process::exit(65);
             }
-
-            Expr::Grouping(Box::new(expr))
         }
-        _ => {
-            eprintln!("Error: Unmatched parentheses.");
-            std::process::exit(65);
-        }
+    } else {
+        eprintln!("Error: Unmatched parentheses.");
+        std::process::exit(65);
     }
 }
 
