@@ -56,6 +56,11 @@ fn main() {
 
             println!("{result}");
         }
+        "run" => {
+            let scan_tokens = scanner::scan_tokens(&file_contents);
+            let tree = parser::parse_tokens(&scan_tokens.tokens);
+            evaluate::evaluate(&tree);
+        }
         _ => {
             eprintln!("Unknown command: {command}");
         }

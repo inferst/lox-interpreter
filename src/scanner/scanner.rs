@@ -13,6 +13,7 @@ fn next_char_match(char: char, chars: &mut Peekable<Chars>) -> bool {
     false
 }
 
+#[derive(Debug)]
 pub struct ScanTokens {
     pub tokens: Vec<Token>,
     pub errors: Vec<Error>,

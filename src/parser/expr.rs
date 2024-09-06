@@ -2,7 +2,7 @@ use core::fmt;
 
 use crate::{scanner::Type, utils::pad_number};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum UnaryOperator {
     Bang,
     Minus,
@@ -27,7 +27,7 @@ impl From<Type> for UnaryOperator {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum BinaryOperator {
     BangEqual,
     EqualEqual,
@@ -76,7 +76,7 @@ impl From<Type> for BinaryOperator {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Expr {
     True,
     False,
@@ -86,6 +86,7 @@ pub enum Expr {
     Unary(UnaryOperator, Box<Expr>),
     Binary(BinaryOperator, Box<Expr>, Box<Expr>),
     Grouping(Box<Expr>),
+    Print(Box<Expr>)
 }
 
 impl fmt::Display for Expr {
@@ -99,6 +100,7 @@ impl fmt::Display for Expr {
             Self::Grouping(expr) => write!(fmt, "(group {expr})"),
             Self::Unary(operator, expr) => write!(fmt, "({operator} {expr})"),
             Self::Binary(operator, expr1, expr2) => write!(fmt, "({operator} {expr1} {expr2})"),
+            Self::Print(expr) => write!(fmt, "print {expr}"),
         }
     }
 }

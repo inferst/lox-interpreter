@@ -77,6 +77,10 @@ where
 
                 Expr::Grouping(Box::new(expr))
             }
+            Type::Print => {
+                let expr = expression(tokens);
+                Expr::Print(Box::new(expr))
+            }
             _ => {
                 eprintln!("Error: Unmatched parentheses.");
                 std::process::exit(65);

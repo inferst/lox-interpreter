@@ -67,7 +67,9 @@ pub fn evaluate(expr: &Expr) -> Literal {
                 },
                 (Literal::Number(_), Literal::String(_))
                 | (Literal::String(_), Literal::Number(_)) => match *operator {
-                    BinaryOperator::EqualEqual | BinaryOperator::BangEqual => Literal::Boolean(false),
+                    BinaryOperator::EqualEqual | BinaryOperator::BangEqual => {
+                        Literal::Boolean(false)
+                    }
                     _ => std::process::exit(70),
                 },
                 (Literal::Boolean(left), Literal::Boolean(right)) => match *operator {
@@ -79,5 +81,10 @@ pub fn evaluate(expr: &Expr) -> Literal {
             }
         }
         Expr::Grouping(expr) => evaluate(expr),
+        Expr::Print(expr) => {
+            let expr = evaluate(expr);
+            println!("{expr}");
+            Literal::Nil
+        }
     }
 }

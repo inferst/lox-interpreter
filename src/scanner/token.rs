@@ -1,10 +1,12 @@
 use core::fmt;
 
+#[derive(Debug)]
 pub struct Error {
     pub line: usize,
     pub message: String,
 }
 
+#[derive(Debug)]
 pub struct Token {
     pub r#type: Type,
     pub lexeme: String,
@@ -21,7 +23,7 @@ impl Token {
     }
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Debug)]
 pub enum Type {
     // Single-character tokens
     RightParen,
