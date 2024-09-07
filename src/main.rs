@@ -45,6 +45,11 @@ fn main() {
         }
         "parse" => {
             let scan_tokens = scanner::scan_tokens(&file_contents);
+
+            if !scan_tokens.errors.is_empty() {
+                std::process::exit(65);
+            }
+
             let tree = parser::parse_tokens(&scan_tokens.tokens);
 
             println!("{tree}");

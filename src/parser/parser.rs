@@ -79,8 +79,15 @@ where
             }
             Type::Print => {
                 let expr = expression(tokens);
+
+                if let Expr::Semicolon = expr {
+                    eprintln!("Error: Print statement must have an expression.");
+                    std::process::exit(65);
+                }
+
                 Expr::Print(Box::new(expr))
             }
+            Type::Semicolon => Expr::Semicolon,
             _ => {
                 eprintln!("Error: Unmatched parentheses.");
                 std::process::exit(65);
@@ -180,5 +187,16 @@ where
 }
 
 pub fn parse_tokens(tokens: &[Token]) -> Expr {
-    expression(&mut tokens.iter().peekable())
+    let mut statements = vec![];
+    let mut tokens = tokens.iter().peekable();
+
+    while tokens.peek().is_some() {
+        statements.push(expression(&mut tokens));
+    }
+
+    if statements.len() == 1 {
+        statements[0].clone()
+    } else {
+        Expr::Statements(statements)
+    }
 }

@@ -24,7 +24,7 @@ pub fn evaluate(expr: &Expr) -> Literal {
     match expr {
         Expr::True => Literal::Boolean(true),
         Expr::False => Literal::Boolean(false),
-        Expr::Nil => Literal::Nil,
+        Expr::Nil | Expr::Semicolon => Literal::Nil,
         Expr::String(string) => Literal::String(string.clone()),
         Expr::Number(number) => Literal::Number(*number),
         Expr::Unary(operator, expr) => {
@@ -85,6 +85,13 @@ pub fn evaluate(expr: &Expr) -> Literal {
             let expr = evaluate(expr);
             println!("{expr}");
             Literal::Nil
+        }
+        Expr::Statements(exprs) => {
+            let mut result = Literal::Nil;
+            for expr in exprs {
+                result = evaluate(expr);
+            }
+            result
         }
     }
 }
