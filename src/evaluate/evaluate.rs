@@ -1,4 +1,5 @@
 use core::fmt;
+use std::collections::HashMap;
 
 use crate::parser::{BinaryOperator, Expr, UnaryOperator};
 
@@ -20,7 +21,7 @@ impl fmt::Display for Literal {
     }
 }
 
-pub fn evaluate(expr: &Expr) -> Literal {
+pub fn evaluate(expr: &Expr, variables: &mut HashMap<String, Box<Expr>>) -> Literal {
     match expr {
         Expr::True => Literal::Boolean(true),
         Expr::False => Literal::Boolean(false),
@@ -28,7 +29,7 @@ pub fn evaluate(expr: &Expr) -> Literal {
         Expr::String(string) => Literal::String(string.clone()),
         Expr::Number(number) => Literal::Number(*number),
         Expr::Unary(operator, expr) => {
-            let literal = evaluate(expr);
+            let literal = evaluate(expr, variables);
             match operator {
                 UnaryOperator::Bang => match literal {
                     Literal::Boolean(bool) => Literal::Boolean(!bool),
@@ -43,8 +44,8 @@ pub fn evaluate(expr: &Expr) -> Literal {
             }
         }
         Expr::Binary(operator, left, right) => {
-            let left = evaluate(left);
-            let right = evaluate(right);
+            let left = evaluate(left, variables);
+            let right = evaluate(right, variables);
 
             match (left, right) {
                 (Literal::Number(left), Literal::Number(right)) => match *operator {
@@ -80,16 +81,21 @@ pub fn evaluate(expr: &Expr) -> Literal {
                 _ => std::process::exit(70),
             }
         }
-        Expr::Grouping(expr) => evaluate(expr),
+        Expr::Grouping(expr) => evaluate(expr, variables),
+        Expr::Identifier(name) => evaluate(&variables.get(name).unwrap().clone(), variables),
+        Expr::Var(name, expr) => {
+            variables.insert(name.clone(), expr.clone());
+            Literal::Nil
+        }
         Expr::Print(expr) => {
-            let expr = evaluate(expr);
+            let expr = evaluate(expr, variables);
             println!("{expr}");
             Literal::Nil
         }
         Expr::Statements(exprs) => {
             let mut result = Literal::Nil;
             for expr in exprs {
-                result = evaluate(expr);
+                result = evaluate(expr, variables);
             }
             result
         }

@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::env;
 use std::fs;
 
@@ -57,14 +58,14 @@ fn main() {
         "evaluate" => {
             let scan_tokens = scanner::scan_tokens(&file_contents);
             let tree = parser::parse_tokens(&scan_tokens.tokens);
-            let result = evaluate::evaluate(&tree);
+            let result = evaluate::evaluate(&tree, &mut HashMap::new());
 
             println!("{result}");
         }
         "run" => {
             let scan_tokens = scanner::scan_tokens(&file_contents);
             let tree = parser::parse_tokens(&scan_tokens.tokens);
-            evaluate::evaluate(&tree);
+            evaluate::evaluate(&tree, &mut HashMap::new());
         }
         _ => {
             eprintln!("Unknown command: {command}");

@@ -77,6 +77,38 @@ where
 
                 Expr::Grouping(Box::new(expr))
             }
+            Type::Identifier => {
+                let value = &token.lexeme;
+                Expr::Identifier(value.clone())
+            }
+            Type::Var => {
+                let token = tokens.next();
+                let mut var = String::new();
+                let mut expr = Expr::Nil;
+
+                if let Some(value) = token {
+                    if value.r#type == Type::Identifier {
+                        var = String::from(&value.lexeme);
+                    } else {
+                        eprintln!("Error: Expected identifier.");
+                        std::process::exit(65);
+                    }
+                }
+
+                let token = tokens.next();
+                if let Some(value) = token {
+                    if value.r#type == Type::Equal {
+                        expr = expression(tokens);
+                    } else if value.r#type == Type::Semicolon {
+                        expr = Expr::Semicolon;
+                    } else {
+                        eprintln!("Error: Expected '=' or ';'.");
+                        std::process::exit(65);
+                    }
+                }
+
+                Expr::Var(var, Box::new(expr))
+            }
             Type::Print => {
                 let expr = expression(tokens);
 

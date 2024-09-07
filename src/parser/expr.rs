@@ -86,6 +86,8 @@ pub enum Expr {
     Unary(UnaryOperator, Box<Expr>),
     Binary(BinaryOperator, Box<Expr>, Box<Expr>),
     Grouping(Box<Expr>),
+    Identifier(String),
+    Var(String, Box<Expr>),
     Print(Box<Expr>),
     Semicolon,
     Statements(Vec<Expr>),
@@ -102,6 +104,8 @@ impl fmt::Display for Expr {
             Self::Grouping(expr) => write!(fmt, "(group {expr})"),
             Self::Unary(operator, expr) => write!(fmt, "({operator} {expr})"),
             Self::Binary(operator, expr1, expr2) => write!(fmt, "({operator} {expr1} {expr2})"),
+            Self::Identifier(string) => write!(fmt, "identifier {string}"),
+            Self::Var(name, expr) => write!(fmt, "var {name} = {expr}"),
             Self::Print(expr) => write!(fmt, "print {expr}"),
             Self::Semicolon => write!(fmt, "semicolon"),
             Self::Statements(exprs) => {
