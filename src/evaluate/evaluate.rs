@@ -113,8 +113,11 @@ pub fn evaluate(expr: &Expr, variables: &mut HashMap<String, Literal>) -> Litera
         }
         Expr::Statements(exprs) => {
             let mut result = Literal::Nil;
+            let mut scoped_variables = HashMap::new();
+            scoped_variables.extend(variables.clone());
+
             for expr in exprs {
-                result = evaluate(expr, variables);
+                result = evaluate(expr, &mut scoped_variables);
             }
             result
         }
