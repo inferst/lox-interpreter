@@ -77,6 +77,26 @@ where
 
                 Expr::Grouping(Box::new(expr))
             }
+            Type::LeftBrace => {
+                let mut statements = vec![];
+
+                while tokens.peek().is_some() {
+                    statements.push(expression(tokens));
+
+                    if let Some(token) = tokens.peek() {
+                        if token.r#type == Type::RightBrace {
+                            break;
+                        }
+                    }
+                }
+
+                if !next_token_type_match(&Type::RightBrace, tokens) {
+                    eprintln!("Error: Unmatched braces.");
+                    std::process::exit(65);
+                }
+
+                Expr::Statements(statements)
+            }
             Type::Identifier => {
                 let lexeme = &token.lexeme;
 
