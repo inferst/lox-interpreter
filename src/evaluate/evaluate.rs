@@ -82,7 +82,12 @@ pub fn evaluate(expr: &Expr, variables: &mut HashMap<String, Box<Expr>>) -> Lite
             }
         }
         Expr::Grouping(expr) => evaluate(expr, variables),
-        Expr::Identifier(name) => evaluate(&variables.get(name).unwrap().clone(), variables),
+        Expr::Identifier(name) => {
+            if !variables.contains_key(name) {
+                std::process::exit(70);
+            }
+            evaluate(&variables.get(name).unwrap().clone(), variables)
+        }
         Expr::Var(name, expr) => {
             variables.insert(name.clone(), expr.clone());
             Literal::Nil
