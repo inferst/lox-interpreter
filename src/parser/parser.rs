@@ -78,8 +78,20 @@ where
                 Expr::Grouping(Box::new(expr))
             }
             Type::Identifier => {
-                let value = &token.lexeme;
-                Expr::Identifier(value.clone())
+                let lexeme = &token.lexeme;
+
+                let token = tokens.peek();
+                if let Some(value) = token {
+                    if value.r#type == Type::Equal {
+                        tokens.next();
+                        let expr = expression(tokens);
+                        return Expr::Assignment(lexeme.clone(), Box::new(expr));
+                    }
+
+                    return Expr::Identifier(lexeme.clone());
+                }
+
+                Expr::Nil
             }
             Type::Var => {
                 let token = tokens.next();
@@ -107,7 +119,7 @@ where
                     }
                 }
 
-                Expr::Var(var, Box::new(expr))
+                Expr::Assignment(var, Box::new(expr))
             }
             Type::Print => {
                 let expr = expression(tokens);
@@ -121,12 +133,12 @@ where
             }
             Type::Semicolon => Expr::Semicolon,
             _ => {
-                eprintln!("Error: Unmatched parentheses.");
+                eprintln!("Error: Unknown token type {:?}.", token.r#type);
                 std::process::exit(65);
             }
         }
     } else {
-        eprintln!("Error: Unmatched parentheses.");
+        eprintln!("Error: Expected token.");
         std::process::exit(65);
     }
 }

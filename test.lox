@@ -1,1 +1,5 @@
-2 + 2 * 3
+var quz = 54;
+var world = 54;
+world = quz;
+quz = world;
+print quz + world;

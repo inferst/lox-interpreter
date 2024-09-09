@@ -84,29 +84,31 @@ pub fn evaluate(expr: &Expr, variables: &mut HashMap<String, Literal>) -> Litera
         }
         Expr::Grouping(expr) => evaluate(expr, variables),
         Expr::Identifier(name) => {
-            if let Some(name) = variables.get(name) {
-                name.clone()
+            if let Some(value) = variables.get(name) {
+                value.clone()
             } else {
                 std::process::exit(70);
             }
         }
-        Expr::Var(name, expr) => {
+        Expr::Assignment(name, expr) => {
             let expr = expr.as_ref();
             if let Expr::Identifier(expr_name) = expr {
                 if let Some(value) = variables.get(expr_name) {
+                    let value = value.clone();
                     variables.insert(name.clone(), value.clone());
+                    value
                 } else {
                     std::process::exit(70);
                 }
             } else {
                 let value = evaluate(expr, variables);
-                variables.insert(name.clone(), value);
+                variables.insert(name.clone(), value.clone());
+                value
             }
-            Literal::Nil
         }
         Expr::Print(expr) => {
-            let expr = evaluate(expr, variables);
-            println!("{expr}");
+            let result = evaluate(expr, variables);
+            println!("{result}");
             Literal::Nil
         }
         Expr::Statements(exprs) => {
