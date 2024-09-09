@@ -1,5 +1,8 @@
-var quz = 54;
-var world = 54;
-world = quz;
-quz = world;
-print quz + world;
+var foo = 1;
+
+{
+  foo = 2;
+  print foo;
+}
+
+print foo;

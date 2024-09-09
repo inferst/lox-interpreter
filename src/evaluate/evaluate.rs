@@ -1,7 +1,8 @@
 use core::fmt;
-use std::collections::HashMap;
 
 use crate::parser::{BinaryOperator, Expr, UnaryOperator};
+
+use super::scope::Scope;
 
 #[derive(Clone, Debug)]
 pub enum Literal {
@@ -22,7 +23,7 @@ impl fmt::Display for Literal {
     }
 }
 
-pub fn evaluate(expr: &Expr, variables: &mut HashMap<String, Literal>) -> Literal {
+pub fn evaluate(expr: &Expr, scope: &mut Scope) -> Literal {
     match expr {
         Expr::True => Literal::Boolean(true),
         Expr::False => Literal::Boolean(false),
@@ -30,7 +31,7 @@ pub fn evaluate(expr: &Expr, variables: &mut HashMap<String, Literal>) -> Litera
         Expr::String(string) => Literal::String(string.clone()),
         Expr::Number(number) => Literal::Number(*number),
         Expr::Unary(operator, expr) => {
-            let literal = evaluate(expr, variables);
+            let literal = evaluate(expr, scope);
             match operator {
                 UnaryOperator::Bang => match literal {
                     Literal::Boolean(bool) => Literal::Boolean(!bool),
@@ -45,8 +46,8 @@ pub fn evaluate(expr: &Expr, variables: &mut HashMap<String, Literal>) -> Litera
             }
         }
         Expr::Binary(operator, left, right) => {
-            let left = evaluate(left, variables);
-            let right = evaluate(right, variables);
+            let left = evaluate(left, scope);
+            let right = evaluate(right, scope);
 
             match (left, right) {
                 (Literal::Number(left), Literal::Number(right)) => match *operator {
@@ -82,44 +83,40 @@ pub fn evaluate(expr: &Expr, variables: &mut HashMap<String, Literal>) -> Litera
                 _ => std::process::exit(70),
             }
         }
-        Expr::Grouping(expr) => evaluate(expr, variables),
-        Expr::Identifier(name) => {
-            if let Some(value) = variables.get(name) {
-                value.clone()
-            } else {
-                std::process::exit(70);
-            }
-        }
-        Expr::Assignment(name, expr) => {
+        Expr::Grouping(expr) => evaluate(expr, scope),
+        Expr::Identifier(name) => scope.get(name),
+        Expr::Assignment(name, expr, define) => {
             let expr = expr.as_ref();
-            if let Expr::Identifier(expr_name) = expr {
-                if let Some(value) = variables.get(expr_name) {
-                    let value = value.clone();
-                    variables.insert(name.clone(), value.clone());
-                    value
-                } else {
-                    std::process::exit(70);
-                }
+
+            if *define {
+                let value = evaluate(expr, scope);
+                scope.define(name.clone(), value.clone());
+                value
+            } else if let Expr::Identifier(expr_name) = expr {
+                let value = scope.get(expr_name);
+                scope.set(name, value.clone());
+                value
             } else {
-                let value = evaluate(expr, variables);
-                variables.insert(name.clone(), value.clone());
+                let value = evaluate(expr, scope);
+                scope.set(name, value.clone());
                 value
             }
         }
         Expr::Print(expr) => {
-            let result = evaluate(expr, variables);
+            let result = evaluate(expr, scope);
             println!("{result}");
             Literal::Nil
         }
         Expr::Statements(exprs) => {
-            let mut result = Literal::Nil;
-            let mut scoped_variables = HashMap::new();
-            scoped_variables.extend(variables.clone());
+            let mut statement = Literal::Nil;
+            scope.push();
 
             for expr in exprs {
-                result = evaluate(expr, &mut scoped_variables);
+                statement = evaluate(expr, scope);
             }
-            result
+
+            scope.pop();
+            statement
         }
     }
 }

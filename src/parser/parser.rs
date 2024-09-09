@@ -105,7 +105,7 @@ where
                     if value.r#type == Type::Equal {
                         tokens.next();
                         let expr = expression(tokens);
-                        return Expr::Assignment(lexeme.clone(), Box::new(expr));
+                        return Expr::Assignment(lexeme.clone(), Box::new(expr), false);
                     }
 
                     return Expr::Identifier(lexeme.clone());
@@ -139,7 +139,7 @@ where
                     }
                 }
 
-                Expr::Assignment(var, Box::new(expr))
+                Expr::Assignment(var, Box::new(expr), true)
             }
             Type::Print => {
                 let expr = expression(tokens);
