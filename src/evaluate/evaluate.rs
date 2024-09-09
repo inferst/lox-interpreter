@@ -3,6 +3,7 @@ use std::collections::HashMap;
 
 use crate::parser::{BinaryOperator, Expr, UnaryOperator};
 
+#[derive(Clone, Debug)]
 pub enum Literal {
     Boolean(bool),
     Number(f64),
@@ -21,7 +22,7 @@ impl fmt::Display for Literal {
     }
 }
 
-pub fn evaluate(expr: &Expr, variables: &mut HashMap<String, Box<Expr>>) -> Literal {
+pub fn evaluate(expr: &Expr, variables: &mut HashMap<String, Literal>) -> Literal {
     match expr {
         Expr::True => Literal::Boolean(true),
         Expr::False => Literal::Boolean(false),
@@ -83,13 +84,24 @@ pub fn evaluate(expr: &Expr, variables: &mut HashMap<String, Box<Expr>>) -> Lite
         }
         Expr::Grouping(expr) => evaluate(expr, variables),
         Expr::Identifier(name) => {
-            if !variables.contains_key(name) {
+            if let Some(name) = variables.get(name) {
+                name.clone()
+            } else {
                 std::process::exit(70);
             }
-            evaluate(&variables.get(name).unwrap().clone(), variables)
         }
         Expr::Var(name, expr) => {
-            variables.insert(name.clone(), expr.clone());
+            let expr = expr.as_ref();
+            if let Expr::Identifier(expr_name) = expr {
+                if let Some(value) = variables.get(expr_name) {
+                    variables.insert(name.clone(), value.clone());
+                } else {
+                    std::process::exit(70);
+                }
+            } else {
+                let value = evaluate(expr, variables);
+                variables.insert(name.clone(), value);
+            }
             Literal::Nil
         }
         Expr::Print(expr) => {
