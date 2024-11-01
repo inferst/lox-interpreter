@@ -16,7 +16,7 @@ where
         for r#type in types {
             if *r#type == peek.r#type {
                 tokens.next();
-                return Some(r#type.clone());
+                return Some(*r#type);
             }
         }
     }
@@ -38,17 +38,18 @@ where
     primary(tokens)
 }
 
-fn next_token_type_match<'a, I>(r#type: &Type, tokens: &mut Peekable<I>) -> bool
+fn next_token_type_match<'a, I>(r#type: Type, tokens: &mut Peekable<I>) -> bool
 where
     I: Iterator<Item = &'a Token>,
 {
-    if tokens.next_if(|token| token.r#type.eq(r#type)).is_some() {
+    if tokens.next_if(|token| token.r#type.eq(&r#type)).is_some() {
         return true;
     }
 
     false
 }
 
+#[allow(clippy::too_many_lines)]
 fn primary<'a, I>(tokens: &mut Peekable<I>) -> Expr
 where
     I: Iterator<Item = &'a Token>,
@@ -70,7 +71,7 @@ where
             Type::LeftParen => {
                 let expr = expression(tokens);
 
-                if !next_token_type_match(&Type::RightParen, tokens) {
+                if !next_token_type_match(Type::RightParen, tokens) {
                     eprintln!("Error: Unmatched parentheses.");
                     std::process::exit(65);
                 }
@@ -90,7 +91,7 @@ where
                     }
                 }
 
-                if !next_token_type_match(&Type::RightBrace, tokens) {
+                if !next_token_type_match(Type::RightBrace, tokens) {
                     eprintln!("Error: Unmatched braces.");
                     std::process::exit(65);
                 }
@@ -155,7 +156,31 @@ where
             Type::If => {
                 let expr1 = expression(tokens);
                 let expr2 = expression(tokens);
-                Expr::If(Box::new(expr1), Box::new(expr2))
+
+                if let Some(token) = tokens.peek() {
+                    let mut token_type = token.r#type;
+
+                    if token_type == Type::Else || token_type == Type::Semicolon {
+                        tokens.next();
+
+                        if token_type == Type::Semicolon {
+                            if let Some(token) = tokens.next() {
+                                token_type = token.r#type;
+                            }
+                        }
+
+                        if token_type == Type::Else {
+                            let else_expr = expression(tokens);
+                            return Expr::IfElse(
+                                Box::new(expr1),
+                                Box::new(expr2),
+                                Some(Box::new(else_expr)),
+                            );
+                        }
+                    }
+                }
+
+                Expr::IfElse(Box::new(expr1), Box::new(expr2), None)
             }
             _ => {
                 eprintln!("Error: Unknown token type {:?}.", token.r#type);

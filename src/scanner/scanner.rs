@@ -90,7 +90,7 @@ pub fn scan_tokens(content: &str) -> ScanTokens {
                 let keyword = keywords::map().get(text.as_str());
 
                 if let Some(token_type) = keyword {
-                    tokens.push(Token::new(token_type.clone(), text.as_str(), None));
+                    tokens.push(Token::new(*token_type, text.as_str(), None));
                 } else {
                     tokens.push(Token::new(Type::Identifier, text.as_str(), None));
                 }

@@ -23,6 +23,7 @@ impl fmt::Display for Literal {
     }
 }
 
+#[allow(clippy::too_many_lines)]
 pub fn evaluate(expr: &Expr, scope: &mut Scope) -> Literal {
     match expr {
         Expr::True => Literal::Boolean(true),
@@ -118,12 +119,14 @@ pub fn evaluate(expr: &Expr, scope: &mut Scope) -> Literal {
             scope.pop();
             statement
         }
-        Expr::If(expr1, expr2) => {
+        Expr::IfElse(expr1, expr2, expr3) => {
             let statement = evaluate(expr1, scope);
 
             if let Literal::Boolean(value) = statement {
                 if value {
                     return evaluate(expr2, scope);
+                } else if let Some(else_expr) = expr3 {
+                    return evaluate(else_expr, scope);
                 }
             }
 
