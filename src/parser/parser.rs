@@ -152,6 +152,11 @@ where
                 Expr::Print(Box::new(expr))
             }
             Type::Semicolon => Expr::Semicolon,
+            Type::If => {
+                let expr1 = expression(tokens);
+                let expr2 = expression(tokens);
+                Expr::If(Box::new(expr1), Box::new(expr2))
+            }
             _ => {
                 eprintln!("Error: Unknown token type {:?}.", token.r#type);
                 std::process::exit(65);

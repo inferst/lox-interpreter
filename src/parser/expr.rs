@@ -91,6 +91,7 @@ pub enum Expr {
     Print(Box<Expr>),
     Semicolon,
     Statements(Vec<Expr>),
+    If(Box<Expr>, Box<Expr>),
 }
 
 impl fmt::Display for Expr {
@@ -111,6 +112,9 @@ impl fmt::Display for Expr {
             Self::Statements(exprs) => {
                 let len = exprs.len();
                 write!(fmt, "statements {len}")
+            }
+            Self::If(expr1, expr2) => {
+                write!(fmt, "if {expr1} then {expr2}")
             }
         }
     }

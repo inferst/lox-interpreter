@@ -118,5 +118,16 @@ pub fn evaluate(expr: &Expr, scope: &mut Scope) -> Literal {
             scope.pop();
             statement
         }
+        Expr::If(expr1, expr2) => {
+            let statement = evaluate(expr1, scope);
+
+            if let Literal::Boolean(value) = statement {
+                if value {
+                    return evaluate(expr2, scope);
+                }
+            }
+
+            Literal::Nil
+        }
     }
 }
