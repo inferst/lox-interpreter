@@ -1,8 +1,7 @@
-var foo = 1;
+if (false) {
+  print "hello1";
+} else if (false) print "hello2";
 
-{
-  foo = 2;
-  print foo;
+if (false) print "hello3"; else if (false) {
+  print "hello4";
 }
-
-print foo;

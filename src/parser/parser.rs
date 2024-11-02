@@ -55,6 +55,7 @@ where
     I: Iterator<Item = &'a Token>,
 {
     if let Some(token) = tokens.next() {
+        //println!("{:?}", token);
         match token.r#type {
             Type::True => Expr::True,
             Type::False => Expr::False,
@@ -160,23 +161,23 @@ where
                 if let Some(token) = tokens.peek() {
                     let mut token_type = token.r#type;
 
-                    if token_type == Type::Else || token_type == Type::Semicolon {
+                    if token_type == Type::Semicolon {
                         tokens.next();
 
-                        if token_type == Type::Semicolon {
-                            if let Some(token) = tokens.next() {
-                                token_type = token.r#type;
-                            }
+                        if let Some(token) = tokens.peek() {
+                            token_type = token.r#type;
                         }
+                    }
 
-                        if token_type == Type::Else {
-                            let else_expr = expression(tokens);
-                            return Expr::IfElse(
-                                Box::new(expr1),
-                                Box::new(expr2),
-                                Some(Box::new(else_expr)),
-                            );
-                        }
+                    if token_type == Type::Else {
+                        tokens.next();
+
+                        let else_expr = expression(tokens);
+                        return Expr::IfElse(
+                            Box::new(expr1),
+                            Box::new(expr2),
+                            Some(Box::new(else_expr)),
+                        );
                     }
                 }
 
