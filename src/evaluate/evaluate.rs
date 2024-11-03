@@ -17,7 +17,7 @@ impl Literal {
         match self {
             Literal::Boolean(value) => *value,
             Literal::Number(value) => *value != 0.0,
-            Literal::String(value) => !value.is_empty(),
+            Literal::String(_) => true,
             Literal::Nil => false,
         }
     }
