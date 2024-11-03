@@ -12,6 +12,17 @@ pub enum Literal {
     Nil,
 }
 
+impl Literal {
+    pub fn as_bool(&self) -> bool {
+        match self {
+            Literal::Boolean(value) => *value,
+            Literal::Number(value) => *value != 0.0,
+            Literal::String(value) => !value.is_empty(),
+            Literal::Nil => false,
+        }
+    }
+}
+
 impl fmt::Display for Literal {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         match self {
@@ -45,6 +56,26 @@ pub fn evaluate(expr: &Expr, scope: &mut Scope) -> Literal {
                     _ => std::process::exit(70),
                 },
             }
+        }
+        Expr::Or(left, right) => {
+            let left = evaluate(left, scope);
+            let value = left.as_bool();
+
+            if value {
+                return left;
+            }
+
+            evaluate(right, scope)
+        }
+        Expr::And(left, right) => {
+            let left = evaluate(left, scope);
+            let value = left.as_bool();
+
+            if !value {
+                return left;
+            }
+
+            evaluate(right, scope)
         }
         Expr::Binary(operator, left, right) => {
             let left = evaluate(left, scope);
@@ -122,12 +153,10 @@ pub fn evaluate(expr: &Expr, scope: &mut Scope) -> Literal {
         Expr::IfElse(expr1, expr2, expr3) => {
             let statement = evaluate(expr1, scope);
 
-            if let Literal::Boolean(value) = statement {
-                if value {
-                    return evaluate(expr2, scope);
-                } else if let Some(else_expr) = expr3 {
-                    return evaluate(else_expr, scope);
-                }
+            if statement.as_bool() {
+                return evaluate(expr2, scope);
+            } else if let Some(else_expr) = expr3 {
+                return evaluate(else_expr, scope);
             }
 
             Literal::Nil

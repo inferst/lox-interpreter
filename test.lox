@@ -1,7 +1,8 @@
-if (false) {
-  print "hello1";
-} else if (false) print "hello2";
+if (false or "ok") print "foo";
+if (nil or "ok") print "foo";
 
-if (false) print "hello3"; else if (false) {
-  print "hello4";
-}
+if (false or false) print "hello";
+if (true or "hello") print "hello";
+
+if (79 or "world") print "world";
+if ("world" or "world") print "world";

@@ -4,31 +4,11 @@ use crate::scanner::{Token, Type};
 
 use super::expr::{BinaryOperator, Expr, UnaryOperator};
 
-fn next_type_match<'a, I>(types: &Vec<Type>, tokens: &mut Peekable<I>) -> Option<Type>
-where
-    I: Iterator<Item = &'a Token>,
-{
-    let peek = tokens.peek();
-
-    if let Some(peek) = peek {
-        let peek = *peek;
-
-        for r#type in types {
-            if *r#type == peek.r#type {
-                tokens.next();
-                return Some(*r#type);
-            }
-        }
-    }
-
-    None
-}
-
 fn unary<'a, I>(tokens: &mut Peekable<I>) -> Expr
 where
     I: Iterator<Item = &'a Token>,
 {
-    if let Some(r#type) = next_type_match(&vec![Type::Bang, Type::Minus], tokens) {
+    if let Some(r#type) = next_type_match(&[Type::Bang, Type::Minus], tokens) {
         let right = unary(tokens);
         let operator: UnaryOperator = r#type.into();
 
@@ -38,15 +18,17 @@ where
     primary(tokens)
 }
 
-fn next_token_type_match<'a, I>(r#type: Type, tokens: &mut Peekable<I>) -> bool
+fn next_type_match<'a, I>(types: &[Type], tokens: &mut Peekable<I>) -> Option<Type>
 where
     I: Iterator<Item = &'a Token>,
 {
-    if tokens.next_if(|token| token.r#type.eq(&r#type)).is_some() {
-        return true;
+    let token = tokens.next_if(|token| types.contains(&token.r#type));
+
+    if let Some(token) = token {
+        return Some(token.r#type);
     }
 
-    false
+    None
 }
 
 #[allow(clippy::too_many_lines)]
@@ -55,7 +37,6 @@ where
     I: Iterator<Item = &'a Token>,
 {
     if let Some(token) = tokens.next() {
-        //println!("{:?}", token);
         match token.r#type {
             Type::True => Expr::True,
             Type::False => Expr::False,
@@ -72,7 +53,7 @@ where
             Type::LeftParen => {
                 let expr = expression(tokens);
 
-                if !next_token_type_match(Type::RightParen, tokens) {
+                if next_type_match(&[Type::RightParen], tokens).is_none() {
                     eprintln!("Error: Unmatched parentheses.");
                     std::process::exit(65);
                 }
@@ -92,7 +73,7 @@ where
                     }
                 }
 
-                if !next_token_type_match(Type::RightBrace, tokens) {
+                if next_type_match(&[Type::RightBrace], tokens).is_none() {
                     eprintln!("Error: Unmatched braces.");
                     std::process::exit(65);
                 }
@@ -194,15 +175,47 @@ where
     }
 }
 
-fn factor<'a, I>(tokens: &mut Peekable<I>) -> Expr
+fn or<'a, I>(tokens: &mut Peekable<I>) -> Expr
+where
+    I: Iterator<Item = &'a Token>,
+{
+    let mut expr = and(tokens);
+
+    while next_type_match(&[Type::Or], tokens).is_some() {
+        let left = expr;
+        let right = and(tokens);
+
+        expr = Expr::Or(Box::new(left), Box::new(right));
+    }
+
+    expr
+}
+
+fn and<'a, I>(tokens: &mut Peekable<I>) -> Expr
 where
     I: Iterator<Item = &'a Token>,
 {
     let mut expr = unary(tokens);
 
-    while let Some(r#type) = next_type_match(&vec![Type::Star, Type::Slash], tokens) {
+    while next_type_match(&[Type::And], tokens).is_some() {
         let left = expr;
         let right = unary(tokens);
+
+        expr = Expr::And(Box::new(left), Box::new(right));
+    }
+
+    expr
+}
+
+fn factor<'a, I>(tokens: &mut Peekable<I>) -> Expr
+where
+    I: Iterator<Item = &'a Token>,
+{
+    let mut expr = or(tokens);
+
+    while let Some(r#type) = next_type_match(&[Type::Star, Type::Slash], tokens) {
+        let left = expr;
+        let right = or(tokens);
 
         let operator: BinaryOperator = r#type.into();
 
@@ -218,7 +231,7 @@ where
 {
     let mut expr = factor(tokens);
 
-    while let Some(r#type) = next_type_match(&vec![Type::Minus, Type::Plus], tokens) {
+    while let Some(r#type) = next_type_match(&[Type::Minus, Type::Plus], tokens) {
         let left = expr;
         let right = factor(tokens);
 
@@ -237,7 +250,7 @@ where
     let mut expr = term(tokens);
 
     while let Some(r#type) = next_type_match(
-        &vec![
+        &[
             Type::Greater,
             Type::GreaterEqual,
             Type::Less,
@@ -262,7 +275,7 @@ where
 {
     let mut expr = comparison(tokens);
 
-    while let Some(r#type) = next_type_match(&vec![Type::EqualEqual, Type::BangEqual], tokens) {
+    while let Some(r#type) = next_type_match(&[Type::EqualEqual, Type::BangEqual], tokens) {
         let left = expr;
         let right = comparison(tokens);
 

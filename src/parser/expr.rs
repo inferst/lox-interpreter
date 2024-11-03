@@ -92,6 +92,8 @@ pub enum Expr {
     Semicolon,
     Statements(Vec<Expr>),
     IfElse(Box<Expr>, Box<Expr>, Option<Box<Expr>>),
+    Or(Box<Expr>, Box<Expr>),
+    And(Box<Expr>, Box<Expr>),
 }
 
 impl fmt::Display for Expr {
@@ -115,6 +117,12 @@ impl fmt::Display for Expr {
             }
             Self::IfElse(expr1, expr2, _) => {
                 write!(fmt, "if {expr1} then {expr2}")
+            }
+            Self::Or(left, right) => {
+                write!(fmt, "{left} or {right}")
+            }
+            Self::And(left, right) => {
+                write!(fmt, "{left} and {right}")
             }
         }
     }
