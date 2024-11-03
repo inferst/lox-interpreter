@@ -94,6 +94,7 @@ pub enum Expr {
     IfElse(Box<Expr>, Box<Expr>, Option<Box<Expr>>),
     Or(Box<Expr>, Box<Expr>),
     And(Box<Expr>, Box<Expr>),
+    While(Box<Expr>, Box<Expr>),
 }
 
 impl fmt::Display for Expr {
@@ -123,6 +124,9 @@ impl fmt::Display for Expr {
             }
             Self::And(left, right) => {
                 write!(fmt, "{left} and {right}")
+            }
+            Self::While(expr1, expr2) => {
+                write!(fmt, "while ({expr1}) {expr2}")
             }
         }
     }

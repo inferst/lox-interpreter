@@ -161,5 +161,12 @@ pub fn evaluate(expr: &Expr, scope: &mut Scope) -> Literal {
 
             Literal::Nil
         }
+        Expr::While(expr1, expr2) => {
+            while evaluate(expr1, scope).as_bool() {
+                evaluate(expr2, scope);
+            }
+
+            Literal::Nil
+        }
     }
 }

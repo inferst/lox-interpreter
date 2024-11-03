@@ -164,6 +164,12 @@ where
 
                 Expr::IfElse(Box::new(expr1), Box::new(expr2), None)
             }
+            Type::While => {
+                let expr1 = expression(tokens);
+                let expr2 = expression(tokens);
+
+                Expr::While(Box::new(expr1), Box::new(expr2))
+            }
             _ => {
                 eprintln!("Error: Unknown token type {:?}.", token.r#type);
                 std::process::exit(65);
