@@ -168,5 +168,26 @@ pub fn evaluate(expr: &Expr, scope: &mut Scope) -> Literal {
 
             Literal::Nil
         }
+        Expr::For(expr1, expr2, expr3, expr4) => {
+
+            //dbg!(expr1);
+            //dbg!(expr2);
+            //dbg!(expr3);
+            //dbg!(expr4);
+
+            if let Some(expr1) = expr1 {
+                evaluate(expr1, scope);
+            }
+
+            while evaluate(expr2, scope).as_bool() {
+                evaluate(expr4, scope);
+
+                if let Some(expr3) = expr3 {
+                    evaluate(expr3, scope);
+                }
+            }
+
+            Literal::Nil
+        }
     }
 }

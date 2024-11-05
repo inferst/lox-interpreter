@@ -95,6 +95,7 @@ pub enum Expr {
     Or(Box<Expr>, Box<Expr>),
     And(Box<Expr>, Box<Expr>),
     While(Box<Expr>, Box<Expr>),
+    For(Option<Box<Expr>>, Box<Expr>, Option<Box<Expr>>, Box<Expr>),
 }
 
 impl fmt::Display for Expr {
@@ -127,6 +128,16 @@ impl fmt::Display for Expr {
             }
             Self::While(expr1, expr2) => {
                 write!(fmt, "while ({expr1}) {expr2}")
+            }
+            Self::For(expr1, expr2, expr3, expr4) => {
+                write!(
+                    fmt,
+                    "for ({};{};{}) {}",
+                    expr1.as_ref().unwrap(),
+                    expr2,
+                    expr3.as_ref().unwrap(),
+                    expr4
+                )
             }
         }
     }

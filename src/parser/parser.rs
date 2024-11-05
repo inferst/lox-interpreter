@@ -61,6 +61,10 @@ where
                 Expr::Grouping(Box::new(expr))
             }
             Type::LeftBrace => {
+                if next_type_match(&[Type::RightBrace], tokens).is_some() {
+                    return Expr::Nil;
+                }
+
                 let mut statements = vec![];
 
                 while tokens.peek().is_some() {
@@ -169,6 +173,56 @@ where
                 let expr2 = expression(tokens);
 
                 Expr::While(Box::new(expr1), Box::new(expr2))
+            }
+            Type::For => {
+                if let Some(token) = tokens.next() {
+                    if token.r#type == Type::LeftParen {
+                        let expr1 = expression(tokens);
+                        let mut some_expr1 = None;
+
+                        if let Expr::Semicolon = expr1 {
+                            some_expr1 = None;
+                        } else {
+                            let expr = expression(tokens);
+                            match expr {
+                                Expr::Semicolon => {
+                                    some_expr1 = Some(Box::new(expr1));
+                                }
+                                _ => {
+                                    eprintln!("Error 1");
+                                }
+                            }
+                        }
+
+                        let expr2 = expression(tokens);
+
+                        let expr3 = expression(tokens);
+                        let mut some_expr3 = None;
+
+                        if let Expr::Semicolon = expr3 {
+                            if let Some(token) = tokens.peek() {
+                                if token.r#type != Type::RightParen {
+                                    let expr = expression(tokens);
+                                    some_expr3 = Some(Box::new(expr));
+                                }
+                            }
+                        } else {
+                            some_expr3 = None;
+                        }
+
+                        if let Some(token) = tokens.next() {
+                            if token.r#type != Type::RightParen {
+                                eprintln!("Error 3");
+                            }
+                        }
+
+                        let expr4 = expression(tokens);
+
+                        return Expr::For(some_expr1, Box::new(expr2), some_expr3, Box::new(expr4));
+                    }
+                }
+
+                Expr::Nil
             }
             _ => {
                 eprintln!("Error: Unknown token type {:?}.", token.r#type);
