@@ -22,10 +22,10 @@ fn next_type_match<'a, I>(types: &[Type], tokens: &mut Peekable<I>) -> Option<Ty
 where
     I: Iterator<Item = &'a Token>,
 {
-    let token = tokens.next_if(|token| types.contains(&token.r#type));
+    let token = tokens.next_if(|token| types.contains(&token.ty));
 
     if let Some(token) = token {
-        return Some(token.r#type);
+        return Some(token.ty);
     }
 
     None
@@ -37,7 +37,9 @@ where
     I: Iterator<Item = &'a Token>,
 {
     if let Some(token) = tokens.next() {
-        match token.r#type {
+        let line = token.line;
+
+        match token.ty {
             Type::True => Expr::True,
             Type::False => Expr::False,
             Type::Nil => Expr::Nil,
@@ -71,7 +73,7 @@ where
                     statements.push(expression(tokens));
 
                     if let Some(token) = tokens.peek() {
-                        if token.r#type == Type::RightBrace {
+                        if token.ty == Type::RightBrace {
                             break;
                         }
                     }
@@ -89,7 +91,7 @@ where
 
                 let token = tokens.peek();
                 if let Some(value) = token {
-                    if value.r#type == Type::Equal {
+                    if value.ty == Type::Equal {
                         tokens.next();
                         let expr = expression(tokens);
                         return Expr::Assignment(lexeme.clone(), Box::new(expr), false);
@@ -106,7 +108,7 @@ where
                 let mut expr = Expr::Nil;
 
                 if let Some(value) = token {
-                    if value.r#type == Type::Identifier {
+                    if value.ty == Type::Identifier {
                         var = String::from(&value.lexeme);
                     } else {
                         eprintln!("Error: Expected identifier.");
@@ -116,9 +118,9 @@ where
 
                 let token = tokens.next();
                 if let Some(value) = token {
-                    if value.r#type == Type::Equal {
+                    if value.ty == Type::Equal {
                         expr = expression(tokens);
-                    } else if value.r#type == Type::Semicolon {
+                    } else if value.ty == Type::Semicolon {
                         expr = Expr::Semicolon;
                     } else {
                         eprintln!("Error: Expected '=' or ';'.");
@@ -138,19 +140,20 @@ where
 
                 Expr::Print(Box::new(expr))
             }
+            // TODO: remove Expr::Semicolon and use next_type_match function instead
             Type::Semicolon => Expr::Semicolon,
             Type::If => {
                 let expr1 = expression(tokens);
                 let expr2 = expression(tokens);
 
                 if let Some(token) = tokens.peek() {
-                    let mut token_type = token.r#type;
+                    let mut token_type = token.ty;
 
                     if token_type == Type::Semicolon {
                         tokens.next();
 
                         if let Some(token) = tokens.peek() {
-                            token_type = token.r#type;
+                            token_type = token.ty;
                         }
                     }
 
@@ -175,57 +178,81 @@ where
                 Expr::While(Box::new(expr1), Box::new(expr2))
             }
             Type::For => {
-                if let Some(token) = tokens.next() {
-                    if token.r#type == Type::LeftParen {
-                        let expr1 = expression(tokens);
-                        let mut some_expr1 = None;
+                if next_type_match(&[Type::LeftParen], tokens).is_some() {
+                    let mut expr1 = None;
 
-                        if let Expr::Semicolon = expr1 {
-                            some_expr1 = None;
-                        } else {
-                            let expr = expression(tokens);
-                            match expr {
-                                Expr::Semicolon => {
-                                    some_expr1 = Some(Box::new(expr1));
-                                }
-                                _ => {
-                                    eprintln!("Error 1");
-                                }
-                            }
+                    // TODO: REFACTOR THIS PLEASE
+                    if next_type_match(&[Type::Semicolon], tokens).is_none() {
+                        let token = tokens.peek().unwrap();
+                        let lexeme = &token.lexeme;
+                        let expr = expression(tokens);
+
+                        if let Expr::Nil = expr {
+                            eprintln!("[line {line}] Error at {lexeme}");
+                            std::process::exit(65);
                         }
 
-                        let expr2 = expression(tokens);
+                        expr1 = Some(Box::new(expr));
 
-                        let expr3 = expression(tokens);
-                        let mut some_expr3 = None;
-
-                        if let Expr::Semicolon = expr3 {
-                            if let Some(token) = tokens.peek() {
-                                if token.r#type != Type::RightParen {
-                                    let expr = expression(tokens);
-                                    some_expr3 = Some(Box::new(expr));
-                                }
-                            }
-                        } else {
-                            some_expr3 = None;
+                        if next_type_match(&[Type::Semicolon], tokens).is_none() {
+                            eprintln!("Token should be semicolon 1");
                         }
-
-                        if let Some(token) = tokens.next() {
-                            if token.r#type != Type::RightParen {
-                                eprintln!("Error 3");
-                            }
-                        }
-
-                        let expr4 = expression(tokens);
-
-                        return Expr::For(some_expr1, Box::new(expr2), some_expr3, Box::new(expr4));
                     }
+
+                    let mut expr2 = None;
+
+                    if next_type_match(&[Type::Semicolon], tokens).is_none() {
+                        let token = tokens.peek().unwrap();
+                        let lexeme = &token.lexeme;
+                        let expr = expression(tokens);
+
+                        if let Expr::Nil = expr {
+                            eprintln!("[line {line}] Error at {lexeme}");
+                            std::process::exit(65);
+                        }
+
+                        expr2 = Some(Box::new(expr));
+
+                        if next_type_match(&[Type::Semicolon], tokens).is_none() {
+                            eprintln!("Token should be semicolon 2");
+                        }
+                    }
+
+                    let mut expr3 = None;
+
+                    if next_type_match(&[Type::RightParen], tokens).is_none() {
+                        let token = tokens.peek().unwrap();
+                        let lexeme = &token.lexeme;
+                        let expr = expression(tokens);
+
+                        if let Expr::Nil = expr {
+                            eprintln!("[line {line}] Error at {lexeme}");
+                            std::process::exit(65);
+                        }
+
+                        expr3 = Some(Box::new(expr));
+
+                        if next_type_match(&[Type::RightParen], tokens).is_none() {
+                            eprintln!("Token should be semicolon 3");
+                        }
+                    }
+
+                    let token = tokens.peek().unwrap();
+                    let lexeme = &token.lexeme;
+                    let expr4 = expression(tokens);
+
+                    if !matches!(expr4, Expr::Statements(_) | Expr::Print(_) | Expr::Nil) {
+                        eprintln!("[line {line}] Error at {lexeme}");
+                        std::process::exit(65);
+                    }
+
+                    return Expr::For(expr1, expr2, expr3, Box::new(expr4));
                 }
 
                 Expr::Nil
             }
             _ => {
-                eprintln!("Error: Unknown token type {:?}.", token.r#type);
+                eprintln!("Error: Unknown token type {:?}.", token.ty);
                 std::process::exit(65);
             }
         }

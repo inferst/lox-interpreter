@@ -95,7 +95,7 @@ pub enum Expr {
     Or(Box<Expr>, Box<Expr>),
     And(Box<Expr>, Box<Expr>),
     While(Box<Expr>, Box<Expr>),
-    For(Option<Box<Expr>>, Box<Expr>, Option<Box<Expr>>, Box<Expr>),
+    For(Option<Box<Expr>>, Option<Box<Expr>>, Option<Box<Expr>>, Box<Expr>),
 }
 
 impl fmt::Display for Expr {
@@ -134,7 +134,7 @@ impl fmt::Display for Expr {
                     fmt,
                     "for ({};{};{}) {}",
                     expr1.as_ref().unwrap(),
-                    expr2,
+                    expr2.as_ref().unwrap(),
                     expr3.as_ref().unwrap(),
                     expr4
                 )

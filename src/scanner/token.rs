@@ -8,17 +8,19 @@ pub struct Error {
 
 #[derive(Debug)]
 pub struct Token {
-    pub r#type: Type,
+    pub ty: Type,
     pub lexeme: String,
     pub literal: Option<String>,
+    pub line: usize,
 }
 
 impl Token {
-    pub fn new(r#type: Type, text: &str, value: Option<String>) -> Token {
+    pub fn new(ty: Type, text: &str, value: Option<String>, line: usize) -> Token {
         Token {
-            r#type,
+            ty,
             lexeme: text.to_string(),
             literal: value,
+            line,
         }
     }
 }

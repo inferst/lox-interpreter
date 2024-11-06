@@ -36,7 +36,7 @@ fn main() {
 
             for token in scan_tokens.tokens {
                 let value = token.literal.unwrap_or("null".to_string());
-                println!("{} {} {}", token.r#type, token.lexeme, value);
+                println!("{} {} {}", token.ty, token.lexeme, value);
             }
 
             println!("EOF  null");
