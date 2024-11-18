@@ -5,8 +5,10 @@ use crate::{
     parser::Expr,
 };
 
+#[allow(clippy::needless_pass_by_value)]
 fn clock(_args: Vec<Value>) -> Expr {
     let time = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH);
+
     if let Ok(duration) = time {
         return Expr::Number(duration.as_secs_f64().floor());
     }
@@ -15,8 +17,5 @@ fn clock(_args: Vec<Value>) -> Expr {
 }
 
 pub fn define(scope: &mut Scope) {
-    scope.define(
-        "clock".to_string(),
-        Value::Callable("clock".to_string(), clock),
-    );
+    scope.define("clock".to_string(), Value::Callable(clock));
 }

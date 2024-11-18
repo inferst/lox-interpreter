@@ -8,15 +8,15 @@ pub type Callable = fn(Vec<Value>) -> Expr;
 
 #[derive(Clone)]
 pub enum Value {
-    Value(Literal),
-    Callable(String, Callable),
+    Literal(Literal),
+    Callable(Callable),
 }
 
 impl fmt::Display for Value {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Value::Value(literal) => write!(fmt, "{literal}"),
-            Value::Callable(name, _) => write!(fmt, "ƒ {name}() {{ [native code] }}"),
+            Value::Literal(literal) => write!(fmt, "{literal}"),
+            Value::Callable(_) => write!(fmt, "ƒ() {{ [native code] }}"),
         }
     }
 }
