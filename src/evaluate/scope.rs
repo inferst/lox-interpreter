@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 
-use super::Literal;
+use super::value::Value;
 
 pub struct Scope {
-    stack: Vec<HashMap<String, Literal>>,
+    stack: Vec<HashMap<String, Value>>,
 }
 
 impl Scope {
@@ -21,11 +21,11 @@ impl Scope {
         self.stack.pop();
     }
 
-    pub fn define(&mut self, name: String, value: Literal) {
+    pub fn define(&mut self, name: String, value: Value) {
         self.stack.last_mut().unwrap().insert(name, value);
     }
 
-    pub fn set(&mut self, name: &str, value: Literal) {
+    pub fn set(&mut self, name: &str, value: Value) {
         for variables in self.stack.iter_mut().rev() {
             if variables.contains_key(name) {
                 variables.insert(name.to_string(), value);
@@ -39,7 +39,7 @@ impl Scope {
             .insert(name.to_string(), value);
     }
 
-    pub fn get(&self, name: &str) -> Literal {
+    pub fn get(&self, name: &str) -> Value {
         for variable in self.stack.iter().rev() {
             if variable.contains_key(name) {
                 return variable[name].clone();

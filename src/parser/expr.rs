@@ -95,7 +95,13 @@ pub enum Expr {
     Or(Box<Expr>, Box<Expr>),
     And(Box<Expr>, Box<Expr>),
     While(Box<Expr>, Box<Expr>),
-    For(Option<Box<Expr>>, Option<Box<Expr>>, Option<Box<Expr>>, Box<Expr>),
+    For(
+        Option<Box<Expr>>,
+        Option<Box<Expr>>,
+        Option<Box<Expr>>,
+        Box<Expr>,
+    ),
+    Callable(String),
 }
 
 impl fmt::Display for Expr {
@@ -138,6 +144,9 @@ impl fmt::Display for Expr {
                     expr3.as_ref().unwrap(),
                     expr4
                 )
+            }
+            Self::Callable(name) => {
+                write!(fmt, "callbale {name}")
             }
         }
     }

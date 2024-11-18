@@ -97,6 +97,18 @@ where
                         return Expr::Assignment(lexeme.clone(), Box::new(expr), false);
                     }
 
+                    if value.ty == Type::LeftParen {
+                        tokens.next();
+
+                        if let Some(token) = tokens.next() {
+                            if token.ty != Type::RightParen {
+                                std::process::exit(65);
+                            }
+                        }
+
+                        return Expr::Callable(lexeme.clone());
+                    }
+
                     return Expr::Identifier(lexeme.clone());
                 }
 
