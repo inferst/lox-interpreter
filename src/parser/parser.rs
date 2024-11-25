@@ -189,6 +189,36 @@ where
 
                 Expr::While(Box::new(expr1), Box::new(expr2))
             }
+            Type::Fun => {
+                let token = tokens.next();
+                let mut name = String::new();
+
+                if let Some(value) = token {
+                    if value.ty == Type::Identifier {
+                        name = String::from(&value.lexeme);
+                    } else {
+                        eprintln!("Error: Expected identifier.");
+                        std::process::exit(65);
+                    }
+                }
+
+                let token = tokens.next();
+
+                if let Some(value) = token {
+                    if value.ty == Type::LeftParen {
+                        if let Some(token) = tokens.next() {
+                            if token.ty != Type::RightParen {
+                                eprintln!("Error: Expected RightParen.");
+                                std::process::exit(65);
+                            }
+                        }
+                    }
+                }
+
+                let expr = expression(tokens);
+
+                Expr::Fun(name, Box::new(expr))
+            }
             Type::For => {
                 if next_type_match(&[Type::LeftParen], tokens).is_some() {
                     let mut expr1 = None;

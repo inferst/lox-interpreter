@@ -102,6 +102,7 @@ pub enum Expr {
         Box<Expr>,
     ),
     Callable(String),
+    Fun(String, Box<Expr>),
 }
 
 impl fmt::Display for Expr {
@@ -147,6 +148,9 @@ impl fmt::Display for Expr {
             }
             Self::Callable(name) => {
                 write!(fmt, "callbale {name}")
+            }
+            Self::Fun(name, _expr) => {
+                write!(fmt, "fun {name}")
             }
         }
     }

@@ -1,1 +1,2 @@
-print(clock());
+fun world() { print 40; }
+world();

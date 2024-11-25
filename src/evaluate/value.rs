@@ -1,10 +1,9 @@
 use core::fmt;
-
-use crate::parser::Expr;
+use std::{cell::RefCell, rc::Rc};
 
 use super::Literal;
 
-pub type Callable = fn(Vec<Value>) -> Expr;
+pub type Callable = Rc<RefCell<dyn FnMut(Vec<Value>) -> Value>>;
 
 #[derive(Clone)]
 pub enum Value {
@@ -16,7 +15,7 @@ impl fmt::Display for Value {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Value::Literal(literal) => write!(fmt, "{literal}"),
-            Value::Callable(_) => write!(fmt, "ƒ() {{ [native code] }}"),
+            Value::Callable(_) => write!(fmt, "<fn foo>"),
         }
     }
 }

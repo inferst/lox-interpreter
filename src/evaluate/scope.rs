@@ -1,6 +1,15 @@
-use std::collections::HashMap;
+use std::{cell::RefCell, collections::HashMap, rc::Rc, time::SystemTime};
 
 use super::value::Value;
+
+#[allow(clippy::needless_pass_by_value)]
+fn clock(_args: Vec<Value>) -> Value {
+    let duration = SystemTime::now()
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .unwrap();
+
+    Value::Literal(super::Literal::Number(duration.as_secs_f64().floor()))
+}
 
 pub struct Scope {
     stack: Vec<HashMap<String, Value>>,
@@ -11,6 +20,15 @@ impl Scope {
         Self {
             stack: vec![HashMap::new()],
         }
+    }
+
+    pub fn global() -> Self {
+        let mut scope = Scope::new();
+        scope.define(
+            String::from("clock"),
+            Value::Callable(Rc::new(RefCell::new(clock))),
+        );
+        scope
     }
 
     pub fn push(&mut self) {

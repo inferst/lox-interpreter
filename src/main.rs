@@ -2,13 +2,11 @@ use std::env;
 use std::fs;
 
 use evaluate::Scope;
-use global::define;
 
 mod evaluate;
 mod parser;
 mod scanner;
 mod utils;
-mod global;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -68,8 +66,7 @@ fn main() {
         "run" => {
             let scan_tokens = scanner::scan_tokens(&file_contents);
             let tree = parser::parse_tokens(&scan_tokens.tokens);
-            let mut scope = Scope::new();
-            define(&mut scope);
+            let mut scope = Scope::global();
             evaluate::evaluate(&tree, &mut scope);
         }
         _ => {

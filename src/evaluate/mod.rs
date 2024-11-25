@@ -2,6 +2,8 @@ mod literal;
 mod scope;
 mod value;
 
+use std::{cell::RefCell, rc::Rc};
+
 pub(crate) use literal::Literal;
 pub(crate) use scope::Scope;
 pub(crate) use value::Value;
@@ -110,8 +112,8 @@ pub fn evaluate(expr: &Expr, scope: &mut Scope) -> Value {
         Expr::Identifier(name) => scope.get(name),
         Expr::Callable(name) => {
             if let Value::Callable(callable) = scope.get(name) {
-                let expr = callable(vec![]);
-                evaluate(&expr, scope)
+                let mut callable = callable.borrow_mut();
+                callable(vec![])
             } else {
                 eprintln!("Error: {name} is not callable");
                 std::process::exit(65);
@@ -136,7 +138,7 @@ pub fn evaluate(expr: &Expr, scope: &mut Scope) -> Value {
         }
         Expr::Print(expr) => {
             let result = evaluate(expr, scope);
-            let result = value_to_literal(&result);
+            //let result = value_to_literal(&result);
             println!("{result}");
             Value::Literal(Literal::Nil)
         }
@@ -185,6 +187,20 @@ pub fn evaluate(expr: &Expr, scope: &mut Scope) -> Value {
                 }
             }
 
+            Value::Literal(Literal::Nil)
+        }
+        Expr::Fun(name, expr) => {
+            let expr = expr.as_ref().clone();
+            let expr = RefCell::new(expr);
+
+            let closure = move |_args| {
+                let expr = expr.borrow_mut();
+                evaluate(&expr, &mut Scope::new())
+            };
+
+            let closure = Rc::new(RefCell::new(closure));
+
+            scope.define(name.clone(), Value::Callable(closure));
             Value::Literal(Literal::Nil)
         }
     }
