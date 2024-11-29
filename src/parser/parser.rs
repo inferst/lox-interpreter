@@ -100,13 +100,25 @@ where
                     if value.ty == Type::LeftParen {
                         tokens.next();
 
-                        if let Some(token) = tokens.next() {
-                            if token.ty != Type::RightParen {
-                                std::process::exit(65);
+                        let mut args_exprs = vec![];
+
+                        while let Some(token) = tokens.peek() {
+                            if token.ty == Type::RightParen {
+                                tokens.next();
+                                break;
                             }
+
+                            if token.ty == Type::Comma {
+                                tokens.next();
+                                continue;
+                            }
+
+                            let expr = expression(tokens);
+
+                            args_exprs.push(expr);
                         }
 
-                        return Expr::Callable(lexeme.clone());
+                        return Expr::Callable(lexeme.clone(), args_exprs);
                     }
 
                     return Expr::Identifier(lexeme.clone());
@@ -192,6 +204,7 @@ where
             Type::Fun => {
                 let token = tokens.next();
                 let mut name = String::new();
+                let mut args = vec![];
 
                 if let Some(value) = token {
                     if value.ty == Type::Identifier {
@@ -206,9 +219,19 @@ where
 
                 if let Some(value) = token {
                     if value.ty == Type::LeftParen {
-                        if let Some(token) = tokens.next() {
-                            if token.ty != Type::RightParen {
-                                eprintln!("Error: Expected RightParen.");
+                        for token in tokens.by_ref() {
+                            if token.ty == Type::RightParen {
+                                break;
+                            }
+
+                            if token.ty == Type::Comma {
+                                continue;
+                            }
+
+                            if Type::Identifier == token.ty {
+                                args.push(token.lexeme.clone());
+                            } else {
+                                eprintln!("Error: Expected Identifier");
                                 std::process::exit(65);
                             }
                         }
@@ -217,7 +240,7 @@ where
 
                 let expr = expression(tokens);
 
-                Expr::Fun(name, Box::new(expr))
+                Expr::Fun(name, args, Box::new(expr))
             }
             Type::For => {
                 if next_type_match(&[Type::LeftParen], tokens).is_some() {

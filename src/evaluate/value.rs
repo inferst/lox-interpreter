@@ -1,9 +1,9 @@
 use core::fmt;
 use std::{cell::RefCell, rc::Rc};
 
-use super::Literal;
+use super::{Expr, Literal, Scope};
 
-pub type Callable = Rc<RefCell<dyn FnMut(Vec<Value>) -> Value>>;
+pub type Callable = Rc<RefCell<dyn FnMut(Vec<Expr>, &mut Scope) -> Value>>;
 
 #[derive(Clone)]
 pub enum Value {

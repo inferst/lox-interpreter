@@ -1,9 +1,9 @@
 use std::{cell::RefCell, collections::HashMap, rc::Rc, time::SystemTime};
 
-use super::value::Value;
+use super::{value::Value, Expr};
 
 #[allow(clippy::needless_pass_by_value)]
-fn clock(_args: Vec<Value>) -> Value {
+fn clock(_args: Vec<Expr>, _scope: &mut Scope) -> Value {
     let duration = SystemTime::now()
         .duration_since(SystemTime::UNIX_EPOCH)
         .unwrap();
@@ -11,6 +11,7 @@ fn clock(_args: Vec<Value>) -> Value {
     Value::Literal(super::Literal::Number(duration.as_secs_f64().floor()))
 }
 
+#[derive(Clone)]
 pub struct Scope {
     stack: Vec<HashMap<String, Value>>,
 }

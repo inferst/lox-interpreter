@@ -76,7 +76,7 @@ impl From<Type> for BinaryOperator {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub enum Expr {
     True,
     False,
@@ -101,8 +101,8 @@ pub enum Expr {
         Option<Box<Expr>>,
         Box<Expr>,
     ),
-    Callable(String),
-    Fun(String, Box<Expr>),
+    Callable(String, Vec<Expr>),
+    Fun(String, Vec<String>, Box<Expr>),
 }
 
 impl fmt::Display for Expr {
@@ -146,10 +146,10 @@ impl fmt::Display for Expr {
                     expr4
                 )
             }
-            Self::Callable(name) => {
+            Self::Callable(name, _args) => {
                 write!(fmt, "callbale {name}")
             }
-            Self::Fun(name, _expr) => {
+            Self::Fun(name, _args, _expr) => {
                 write!(fmt, "fun {name}")
             }
         }

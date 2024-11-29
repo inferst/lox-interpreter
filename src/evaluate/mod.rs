@@ -110,10 +110,10 @@ pub fn evaluate(expr: &Expr, scope: &mut Scope) -> Value {
         }
         Expr::Grouping(expr) => evaluate(expr, scope),
         Expr::Identifier(name) => scope.get(name),
-        Expr::Callable(name) => {
+        Expr::Callable(name, args) => {
             if let Value::Callable(callable) = scope.get(name) {
                 let mut callable = callable.borrow_mut();
-                callable(vec![])
+                callable(args.clone(), scope)
             } else {
                 eprintln!("Error: {name} is not callable");
                 std::process::exit(65);
@@ -138,7 +138,6 @@ pub fn evaluate(expr: &Expr, scope: &mut Scope) -> Value {
         }
         Expr::Print(expr) => {
             let result = evaluate(expr, scope);
-            //let result = value_to_literal(&result);
             println!("{result}");
             Value::Literal(Literal::Nil)
         }
@@ -189,13 +188,29 @@ pub fn evaluate(expr: &Expr, scope: &mut Scope) -> Value {
 
             Value::Literal(Literal::Nil)
         }
-        Expr::Fun(name, expr) => {
+        Expr::Fun(name, args, expr) => {
             let expr = expr.as_ref().clone();
             let expr = RefCell::new(expr);
+            let args = args.clone();
 
-            let closure = move |_args| {
+            let closure = move |values: Vec<Expr>, scope: &mut Scope| {
+                let args = args.clone();
+
+                if values.len() != args.len() {
+                    eprintln!("Error: Number of arguments is incorrect");
+                    std::process::exit(65);
+                }
+
                 let expr = expr.borrow_mut();
-                evaluate(&expr, &mut Scope::new())
+                let mut function_scope = Scope::new();
+
+                for (index, arg) in args.iter().enumerate() {
+                    let value_expr = values.get(index).unwrap();
+                    let value = evaluate(value_expr, scope);
+                    function_scope.set(arg, value);
+                }
+
+                evaluate(&expr, &mut function_scope)
             };
 
             let closure = Rc::new(RefCell::new(closure));
