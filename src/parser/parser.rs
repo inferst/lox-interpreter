@@ -113,6 +113,11 @@ where
                                 continue;
                             }
 
+                            if token.ty == Type::Semicolon {
+                                eprintln!("[line {line}] Error Unexpected Semicolon");
+                                std::process::exit(65);
+                            }
+
                             let expr = expression(tokens);
 
                             args_exprs.push(expr);
@@ -210,7 +215,7 @@ where
                     if value.ty == Type::Identifier {
                         name = String::from(&value.lexeme);
                     } else {
-                        eprintln!("Error: Expected identifier.");
+                        eprintln!("[line {line}] Error Expected Identifier");
                         std::process::exit(65);
                     }
                 }
@@ -231,10 +236,19 @@ where
                             if Type::Identifier == token.ty {
                                 args.push(token.lexeme.clone());
                             } else {
-                                eprintln!("Error: Expected Identifier");
+                                eprintln!("[line {line}] Error Expected Identifier");
                                 std::process::exit(65);
                             }
                         }
+                    }
+                }
+
+                let token = tokens.peek();
+
+                if let Some(value) = token {
+                    if value.ty != Type::LeftBrace {
+                        eprintln!("[line {line}] Error LeftBrace");
+                        std::process::exit(65);
                     }
                 }
 
