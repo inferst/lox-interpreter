@@ -20,7 +20,7 @@ fn value_to_literal(value: &Value) -> &Literal {
 }
 
 #[allow(clippy::too_many_lines)]
-pub fn evaluate(expr: &Expr, scope: &mut Scope) -> Value {
+pub fn evaluate(expr: &Expr, scope: &Scope) -> Value {
     match expr {
         Expr::True => Value::Literal(Literal::Boolean(true)),
         Expr::False => Value::Literal(Literal::Boolean(false)),
@@ -112,8 +112,8 @@ pub fn evaluate(expr: &Expr, scope: &mut Scope) -> Value {
         Expr::Identifier(name) => scope.get(name),
         Expr::Callable(name, args) => {
             if let Value::Callable(callable) = scope.get(name) {
-                let mut callable = callable.borrow_mut();
-                callable(args.clone(), scope)
+                let callable = callable.clone();
+                callable(args.clone(), scope.clone())
             } else {
                 eprintln!("Error: {name} is not callable");
                 std::process::exit(65);
@@ -147,6 +147,11 @@ pub fn evaluate(expr: &Expr, scope: &mut Scope) -> Value {
 
             for expr in exprs {
                 statement = evaluate(expr, scope);
+
+                if let Value::Return(literal) = statement {
+                    scope.pop();
+                    return Value::Literal(literal);
+                }
             }
 
             scope.pop();
@@ -166,7 +171,10 @@ pub fn evaluate(expr: &Expr, scope: &mut Scope) -> Value {
         }
         Expr::While(expr1, expr2) => {
             while value_to_literal(&evaluate(expr1, scope)).as_bool() {
-                evaluate(expr2, scope);
+                let statement = evaluate(expr2, scope);
+                if let Value::Return(literal) = statement {
+                    return Value::Return(literal);
+                }
             }
 
             Value::Literal(Literal::Nil)
@@ -193,7 +201,7 @@ pub fn evaluate(expr: &Expr, scope: &mut Scope) -> Value {
             let expr = RefCell::new(expr);
             let args = args.clone();
 
-            let closure = move |values: Vec<Expr>, scope: &mut Scope| {
+            let closure = move |values: Vec<Expr>, scope: Scope| {
                 let args = args.clone();
 
                 if values.len() != args.len() {
@@ -201,22 +209,39 @@ pub fn evaluate(expr: &Expr, scope: &mut Scope) -> Value {
                     std::process::exit(65);
                 }
 
-                let expr = expr.borrow_mut();
-                let mut function_scope = Scope::new();
+                let function_scope = Scope::new(Some(Box::new(scope.clone())));
+
+                let expr = expr.borrow();
 
                 for (index, arg) in args.iter().enumerate() {
                     let value_expr = values.get(index).unwrap();
-                    let value = evaluate(value_expr, scope);
+                    let value = evaluate(value_expr, &function_scope);
                     function_scope.set(arg, value);
                 }
 
-                evaluate(&expr, &mut function_scope)
+                let statement = evaluate(&expr, &function_scope);
+
+                if let Value::Return(literal) = statement {
+                    scope.pop();
+                    return Value::Literal(literal);
+                }
+
+                statement
             };
 
-            let closure = Rc::new(RefCell::new(closure));
+            let closure = Rc::new(closure);
 
             scope.define(name.clone(), Value::Callable(closure));
             Value::Literal(Literal::Nil)
+        }
+        Expr::Return(expr) => {
+            let value = evaluate(expr, scope);
+
+            match value {
+                Value::Literal(literal) => Value::Return(literal),
+                Value::Callable(_callable) => todo!("TODO Callable"),
+                Value::Return(_) => value,
+            }
         }
     }
 }

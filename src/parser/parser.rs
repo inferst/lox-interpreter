@@ -330,6 +330,10 @@ where
 
                 Expr::Nil
             }
+            Type::Return => {
+                let expr = expression(tokens);
+                Expr::Return(Box::new(expr))
+            }
             _ => {
                 eprintln!("Error: Unknown token type {:?}.", token.ty);
                 std::process::exit(65);

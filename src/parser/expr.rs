@@ -103,6 +103,7 @@ pub enum Expr {
     ),
     Callable(String, Vec<Expr>),
     Fun(String, Vec<String>, Box<Expr>),
+    Return(Box<Expr>),
 }
 
 impl fmt::Display for Expr {
@@ -151,6 +152,9 @@ impl fmt::Display for Expr {
             }
             Self::Fun(name, _args, _expr) => {
                 write!(fmt, "fun {name}")
+            }
+            Self::Return(_expr) => {
+                write!(fmt, "return")
             }
         }
     }

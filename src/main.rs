@@ -59,7 +59,7 @@ fn main() {
         "evaluate" => {
             let scan_tokens = scanner::scan_tokens(&file_contents);
             let tree = parser::parse_tokens(&scan_tokens.tokens);
-            let result = evaluate::evaluate(&tree, &mut Scope::new());
+            let result = evaluate::evaluate(&tree, &mut Scope::new(None));
 
             println!("{result}");
         }
