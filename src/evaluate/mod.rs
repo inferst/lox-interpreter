@@ -112,8 +112,18 @@ pub fn evaluate(expr: &Expr, scope: &Scope) -> Value {
         Expr::Identifier(name) => scope.get(name),
         Expr::Callable(name, args) => {
             if let Value::Callable(callable) = scope.get(name) {
-                let callable = callable.clone();
-                callable(args.clone(), scope.clone())
+                let mut callable = callable;
+                let mut value = Value::Literal(Literal::Nil);
+
+                for args in args {
+                    value = callable(args.clone(), scope.clone());
+
+                    if let Value::Callable(closure) = &value {
+                        callable = closure.clone();
+                    }
+                }
+
+                value
             } else {
                 eprintln!("Error: {name} is not callable");
                 std::process::exit(65);
@@ -148,9 +158,9 @@ pub fn evaluate(expr: &Expr, scope: &Scope) -> Value {
             for expr in exprs {
                 statement = evaluate(expr, scope);
 
-                if let Value::Return(literal) = statement {
+                if let Value::Return(value) = statement {
                     scope.pop();
-                    return Value::Literal(literal);
+                    return *value;
                 }
             }
 
@@ -172,8 +182,8 @@ pub fn evaluate(expr: &Expr, scope: &Scope) -> Value {
         Expr::While(expr1, expr2) => {
             while value_to_literal(&evaluate(expr1, scope)).as_bool() {
                 let statement = evaluate(expr2, scope);
-                if let Value::Return(literal) = statement {
-                    return Value::Return(literal);
+                if let Value::Return(_) = &statement {
+                    return statement;
                 }
             }
 
@@ -186,7 +196,10 @@ pub fn evaluate(expr: &Expr, scope: &Scope) -> Value {
 
             if let Some(expr2) = expr2 {
                 while value_to_literal(&evaluate(expr2, scope)).as_bool() {
-                    evaluate(expr4, scope);
+                    let statement = evaluate(expr4, scope);
+                    if let Value::Return(_) = &statement {
+                        return statement;
+                    }
 
                     if let Some(expr3) = expr3 {
                         evaluate(expr3, scope);
@@ -219,14 +232,7 @@ pub fn evaluate(expr: &Expr, scope: &Scope) -> Value {
                     function_scope.set(arg, value);
                 }
 
-                let statement = evaluate(&expr, &function_scope);
-
-                if let Value::Return(literal) = statement {
-                    scope.pop();
-                    return Value::Literal(literal);
-                }
-
-                statement
+                evaluate(&expr, &function_scope)
             };
 
             let closure = Rc::new(closure);
@@ -236,12 +242,7 @@ pub fn evaluate(expr: &Expr, scope: &Scope) -> Value {
         }
         Expr::Return(expr) => {
             let value = evaluate(expr, scope);
-
-            match value {
-                Value::Literal(literal) => Value::Return(literal),
-                Value::Callable(_callable) => todo!("TODO Callable"),
-                Value::Return(_) => value,
-            }
+            Value::Return(Box::new(value))
         }
     }
 }

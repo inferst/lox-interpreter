@@ -97,7 +97,10 @@ where
                         return Expr::Assignment(lexeme.clone(), Box::new(expr), false);
                     }
 
-                    if value.ty == Type::LeftParen {
+                    let mut ty = value.ty;
+                    let mut args = vec![];
+
+                    while ty == Type::LeftParen {
                         tokens.next();
 
                         let mut args_exprs = vec![];
@@ -123,7 +126,16 @@ where
                             args_exprs.push(expr);
                         }
 
-                        return Expr::Callable(lexeme.clone(), args_exprs);
+                        args.push(args_exprs);
+
+                        let token = tokens.peek();
+                        if let Some(token) = token {
+                            ty = token.ty;
+                        }
+                    }
+
+                    if !args.is_empty() {
+                        return Expr::Callable(lexeme.clone(), args);
                     }
 
                     return Expr::Identifier(lexeme.clone());

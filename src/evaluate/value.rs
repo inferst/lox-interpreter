@@ -9,7 +9,7 @@ pub type Callable = Rc<dyn Fn(Vec<Expr>, Scope) -> Value>;
 pub enum Value {
     Literal(Literal),
     Callable(Callable),
-    Return(Literal),
+    Return(Box<Value>),
 }
 
 impl fmt::Display for Value {

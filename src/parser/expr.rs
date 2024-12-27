@@ -101,7 +101,7 @@ pub enum Expr {
         Option<Box<Expr>>,
         Box<Expr>,
     ),
-    Callable(String, Vec<Expr>),
+    Callable(String, Vec<Vec<Expr>>),
     Fun(String, Vec<String>, Box<Expr>),
     Return(Box<Expr>),
 }
