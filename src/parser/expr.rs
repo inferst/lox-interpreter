@@ -76,7 +76,7 @@ impl From<Type> for BinaryOperator {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Expr {
     True,
     False,

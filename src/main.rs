@@ -59,15 +59,15 @@ fn main() {
         "evaluate" => {
             let scan_tokens = scanner::scan_tokens(&file_contents);
             let tree = parser::parse_tokens(&scan_tokens.tokens);
-            let result = evaluate::evaluate(&tree, &mut Scope::new(None));
+            let result = evaluate::evaluate(&tree, &Scope::new(vec![], None));
 
             println!("{result}");
         }
         "run" => {
             let scan_tokens = scanner::scan_tokens(&file_contents);
             let tree = parser::parse_tokens(&scan_tokens.tokens);
-            let mut scope = Scope::global();
-            evaluate::evaluate(&tree, &mut scope);
+            let scope = Scope::global();
+            evaluate::evaluate(&tree, &scope);
         }
         _ => {
             eprintln!("Unknown command: {command}");

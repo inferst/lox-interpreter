@@ -1,5 +1,16 @@
-fun f() {
-  while (!false) return "ok";
+fun makeAdder(x) {
+  fun add(y) {
+    return x + y;
+  }
+  return add;
 }
 
-print f();
+fun applyTwice(f, x) {
+  return f(f(x));
+}
+
+var addx = makeAdder(5);
+var addy = makeAdder(5);
+
+print applyTwice(addx, 5);
+print applyTwice(addy, 5);

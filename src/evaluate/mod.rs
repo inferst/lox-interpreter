@@ -11,12 +11,14 @@ pub(crate) use value::Value;
 use crate::parser::{BinaryOperator, Expr, UnaryOperator};
 
 fn value_to_literal(value: &Value) -> &Literal {
-    let Value::Literal(value) = value else {
-        eprintln!("Error: {value} is not literal");
-        std::process::exit(65);
-    };
-
-    value
+    match value {
+        Value::Literal(value) => value,
+        Value::Return(value) => value_to_literal(value),
+        Value::Callable(_, _) => {
+            eprintln!("Error: {value} is not literal");
+            std::process::exit(65);
+        }
+    }
 }
 
 #[allow(clippy::too_many_lines)]
@@ -111,14 +113,21 @@ pub fn evaluate(expr: &Expr, scope: &Scope) -> Value {
         Expr::Grouping(expr) => evaluate(expr, scope),
         Expr::Identifier(name) => scope.get(name),
         Expr::Callable(name, args) => {
-            if let Value::Callable(callable) = scope.get(name) {
+            if let Value::Callable(callable, function_scope) = scope.get(name) {
                 let mut callable = callable;
                 let mut value = Value::Literal(Literal::Nil);
 
-                for args in args {
-                    value = callable(args.clone(), scope.clone());
+                let mut callable_scope = scope.clone();
 
-                    if let Value::Callable(closure) = &value {
+                if let Some(function_scope) = function_scope {
+                    let stack = function_scope.stack.borrow().clone();
+                    callable_scope = Scope::new(stack, Some(Rc::new(RefCell::new(scope.clone()))));
+                }
+
+                for args in args {
+                    value = callable(args.clone(), callable_scope.clone());
+
+                    if let Value::Callable(closure, _) = &value {
                         callable = closure.clone();
                     }
                 }
@@ -158,9 +167,13 @@ pub fn evaluate(expr: &Expr, scope: &Scope) -> Value {
             for expr in exprs {
                 statement = evaluate(expr, scope);
 
-                if let Value::Return(value) = statement {
-                    scope.pop();
-                    return *value;
+                if let Value::Return(value) = &statement {
+                    if let Value::Callable(callable, _) = &**value {
+                        return Value::Callable(callable.clone(), Some(scope.clone()));
+                    }
+
+                    scope.clear();
+                    return statement;
                 }
             }
 
@@ -222,7 +235,7 @@ pub fn evaluate(expr: &Expr, scope: &Scope) -> Value {
                     std::process::exit(65);
                 }
 
-                let function_scope = Scope::new(Some(Box::new(scope.clone())));
+                let function_scope = Scope::new(vec![], Some(Rc::new(RefCell::new(scope.clone()))));
 
                 let expr = expr.borrow();
 
@@ -237,7 +250,7 @@ pub fn evaluate(expr: &Expr, scope: &Scope) -> Value {
 
             let closure = Rc::new(closure);
 
-            scope.define(name.clone(), Value::Callable(closure));
+            scope.define(name.clone(), Value::Callable(closure, None));
             Value::Literal(Literal::Nil)
         }
         Expr::Return(expr) => {
