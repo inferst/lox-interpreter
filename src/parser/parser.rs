@@ -44,10 +44,20 @@ where
             Type::False => Expr::False,
             Type::Nil => Expr::Nil,
             Type::Number => {
+                if next_type_match(&[Type::LeftParen], tokens).is_some() {
+                    eprintln!("Can only call functions and classes.");
+                    std::process::exit(70);
+                }
+
                 let value = token.lexeme.parse::<f64>().unwrap();
                 Expr::Number(value)
             }
             Type::String => {
+                if next_type_match(&[Type::LeftParen], tokens).is_some() {
+                    eprintln!("Can only call functions and classes.");
+                    std::process::exit(70);
+                }
+
                 let literal = &token.literal;
                 let string = literal.clone().unwrap();
                 Expr::String(string.to_string())
@@ -58,6 +68,11 @@ where
                 if next_type_match(&[Type::RightParen], tokens).is_none() {
                     eprintln!("Error: Unmatched parentheses.");
                     std::process::exit(65);
+                }
+
+                if next_type_match(&[Type::LeftParen], tokens).is_some() {
+                    eprintln!("Error: Can only call functions and classes.");
+                    std::process::exit(70);
                 }
 
                 Expr::Grouping(Box::new(expr))
@@ -236,17 +251,29 @@ where
 
                 if let Some(value) = token {
                     if value.ty == Type::LeftParen {
-                        for token in tokens.by_ref() {
+                        while let Some(token) = tokens.peek() {
                             if token.ty == Type::RightParen {
+                                tokens.next();
                                 break;
                             }
 
                             if token.ty == Type::Comma {
+                                tokens.next();
                                 continue;
                             }
 
                             if Type::Identifier == token.ty {
                                 args.push(token.lexeme.clone());
+                                tokens.next();
+
+                                let token = tokens.peek();
+
+                                if let Some(token) = token {
+                                    if token.ty != Type::RightParen && token.ty != Type::Comma {
+                                        eprintln!("[line {line}] Missing comma");
+                                        std::process::exit(65);
+                                    }
+                                }
                             } else {
                                 eprintln!("[line {line}] Error Expected Identifier");
                                 std::process::exit(65);

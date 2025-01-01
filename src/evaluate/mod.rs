@@ -231,8 +231,12 @@ pub fn evaluate(expr: &Expr, scope: &Scope) -> Value {
                 let args = args.clone();
 
                 if values.len() != args.len() {
-                    eprintln!("Error: Number of arguments is incorrect");
-                    std::process::exit(65);
+                    eprintln!(
+                        "Error: Expected {} arguments but got {}",
+                        args.len(),
+                        values.len()
+                    );
+                    std::process::exit(70);
                 }
 
                 let function_scope = Scope::new(vec![], Some(Rc::new(RefCell::new(scope.clone()))));
