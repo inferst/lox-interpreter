@@ -3,7 +3,7 @@ use std::rc::Rc;
 
 use super::{Expr, Literal, Scope};
 
-pub type Callable = Rc<dyn Fn(Vec<Expr>, Scope) -> Value>;
+pub type Callable = Rc<dyn Fn(Vec<Expr>, Scope, Scope) -> Value>;
 
 #[derive(Clone)]
 pub enum Value {

@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::env;
 use std::fs;
 
@@ -59,7 +60,7 @@ fn main() {
         "evaluate" => {
             let scan_tokens = scanner::scan_tokens(&file_contents);
             let tree = parser::parse_tokens(&scan_tokens.tokens);
-            let result = evaluate::evaluate(&tree, &Scope::new(vec![], None));
+            let result = evaluate::evaluate(&tree, &Scope::new(HashMap::new(), None));
 
             println!("{result}");
         }

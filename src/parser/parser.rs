@@ -384,47 +384,15 @@ where
     }
 }
 
-fn or<'a, I>(tokens: &mut Peekable<I>) -> Expr
-where
-    I: Iterator<Item = &'a Token>,
-{
-    let mut expr = and(tokens);
-
-    while next_type_match(&[Type::Or], tokens).is_some() {
-        let left = expr;
-        let right = and(tokens);
-
-        expr = Expr::Or(Box::new(left), Box::new(right));
-    }
-
-    expr
-}
-
-fn and<'a, I>(tokens: &mut Peekable<I>) -> Expr
+fn factor<'a, I>(tokens: &mut Peekable<I>) -> Expr
 where
     I: Iterator<Item = &'a Token>,
 {
     let mut expr = unary(tokens);
 
-    while next_type_match(&[Type::And], tokens).is_some() {
-        let left = expr;
-        let right = unary(tokens);
-
-        expr = Expr::And(Box::new(left), Box::new(right));
-    }
-
-    expr
-}
-
-fn factor<'a, I>(tokens: &mut Peekable<I>) -> Expr
-where
-    I: Iterator<Item = &'a Token>,
-{
-    let mut expr = or(tokens);
-
     while let Some(r#type) = next_type_match(&[Type::Star, Type::Slash], tokens) {
         let left = expr;
-        let right = or(tokens);
+        let right = unary(tokens);
 
         let operator: BinaryOperator = r#type.into();
 
@@ -496,11 +464,43 @@ where
     expr
 }
 
+fn or<'a, I>(tokens: &mut Peekable<I>) -> Expr
+where
+    I: Iterator<Item = &'a Token>,
+{
+    let mut expr = and(tokens);
+
+    while next_type_match(&[Type::Or], tokens).is_some() {
+        let left = expr;
+        let right = and(tokens);
+
+        expr = Expr::Or(Box::new(left), Box::new(right));
+    }
+
+    expr
+}
+
+fn and<'a, I>(tokens: &mut Peekable<I>) -> Expr
+where
+    I: Iterator<Item = &'a Token>,
+{
+    let mut expr = equality(tokens);
+
+    while next_type_match(&[Type::And], tokens).is_some() {
+        let left = expr;
+        let right = equality(tokens);
+
+        expr = Expr::And(Box::new(left), Box::new(right));
+    }
+
+    expr
+}
+
 fn expression<'a, I>(tokens: &mut Peekable<I>) -> Expr
 where
     I: Iterator<Item = &'a Token>,
 {
-    equality(tokens)
+    or(tokens)
 }
 
 pub fn parse_tokens(tokens: &[Token]) -> Expr {

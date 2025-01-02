@@ -2,7 +2,7 @@ mod literal;
 mod scope;
 mod value;
 
-use std::{cell::RefCell, rc::Rc};
+use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 pub(crate) use literal::Literal;
 pub(crate) use scope::Scope;
@@ -111,7 +111,9 @@ pub fn evaluate(expr: &Expr, scope: &Scope) -> Value {
             }
         }
         Expr::Grouping(expr) => evaluate(expr, scope),
-        Expr::Identifier(name) => scope.get(name),
+        Expr::Identifier(name) => {
+            scope.get(name)
+        }
         Expr::Callable(name, args) => {
             if let Value::Callable(callable, function_scope) = scope.get(name) {
                 let mut callable = callable;
@@ -120,15 +122,19 @@ pub fn evaluate(expr: &Expr, scope: &Scope) -> Value {
                 let mut callable_scope = scope.clone();
 
                 if let Some(function_scope) = function_scope {
-                    let stack = function_scope.stack.borrow().clone();
-                    callable_scope = Scope::new(stack, Some(Rc::new(RefCell::new(scope.clone()))));
+                    callable_scope = function_scope;
                 }
 
                 for args in args {
-                    value = callable(args.clone(), callable_scope.clone());
+                    // TODO: Separate scope for arguments?
+                    value = callable(args.clone(), callable_scope.clone(), scope.clone());
 
-                    if let Value::Callable(closure, _) = &value {
-                        callable = closure.clone();
+                    if let Value::Callable(closure, _scope) = value.clone() {
+                        callable = closure;
+
+                        //if let Some(scope) = scope {
+                        //    callable_scope = scope;
+                        //}
                     }
                 }
 
@@ -162,22 +168,20 @@ pub fn evaluate(expr: &Expr, scope: &Scope) -> Value {
         }
         Expr::Statements(exprs) => {
             let mut statement = Value::Literal(Literal::Nil);
-            scope.push();
+            let scope = Scope::new(HashMap::new(), Some(Rc::new(RefCell::new(scope.clone()))));
 
             for expr in exprs {
-                statement = evaluate(expr, scope);
+                statement = evaluate(expr, &scope);
 
                 if let Value::Return(value) = &statement {
                     if let Value::Callable(callable, _) = &**value {
                         return Value::Callable(callable.clone(), Some(scope.clone()));
                     }
 
-                    scope.clear();
                     return statement;
                 }
             }
 
-            scope.pop();
             statement
         }
         Expr::IfElse(expr1, expr2, expr3) => {
@@ -227,7 +231,7 @@ pub fn evaluate(expr: &Expr, scope: &Scope) -> Value {
             let expr = RefCell::new(expr);
             let args = args.clone();
 
-            let closure = move |values: Vec<Expr>, scope: Scope| {
+            let closure = move |values: Vec<Expr>, function_scope: Scope, args_scope: Scope| {
                 let args = args.clone();
 
                 if values.len() != args.len() {
@@ -239,14 +243,15 @@ pub fn evaluate(expr: &Expr, scope: &Scope) -> Value {
                     std::process::exit(70);
                 }
 
-                let function_scope = Scope::new(vec![], Some(Rc::new(RefCell::new(scope.clone()))));
+                let function_scope =
+                    Scope::new(HashMap::new(), Some(Rc::new(RefCell::new(function_scope.clone()))));
 
                 let expr = expr.borrow();
 
                 for (index, arg) in args.iter().enumerate() {
                     let value_expr = values.get(index).unwrap();
-                    let value = evaluate(value_expr, &function_scope);
-                    function_scope.set(arg, value);
+                    let value = evaluate(value_expr, &args_scope);
+                    function_scope.define(arg.clone(), value);
                 }
 
                 evaluate(&expr, &function_scope)
@@ -254,7 +259,7 @@ pub fn evaluate(expr: &Expr, scope: &Scope) -> Value {
 
             let closure = Rc::new(closure);
 
-            scope.define(name.clone(), Value::Callable(closure, None));
+            scope.define(name.clone(), Value::Callable(closure, Some(scope.clone())));
             Value::Literal(Literal::Nil)
         }
         Expr::Return(expr) => {
