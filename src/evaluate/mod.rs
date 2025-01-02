@@ -111,9 +111,7 @@ pub fn evaluate(expr: &Expr, scope: &Scope) -> Value {
             }
         }
         Expr::Grouping(expr) => evaluate(expr, scope),
-        Expr::Identifier(name) => {
-            scope.get(name)
-        }
+        Expr::Identifier(name) => scope.get(name),
         Expr::Callable(name, args) => {
             if let Value::Callable(callable, function_scope) = scope.get(name) {
                 let mut callable = callable;
@@ -126,15 +124,14 @@ pub fn evaluate(expr: &Expr, scope: &Scope) -> Value {
                 }
 
                 for args in args {
-                    // TODO: Separate scope for arguments?
                     value = callable(args.clone(), callable_scope.clone(), scope.clone());
 
-                    if let Value::Callable(closure, _scope) = value.clone() {
+                    if let Value::Callable(closure, scope) = value.clone() {
                         callable = closure;
 
-                        //if let Some(scope) = scope {
-                        //    callable_scope = scope;
-                        //}
+                        if let Some(scope) = scope {
+                            callable_scope = scope;
+                        }
                     }
                 }
 
@@ -243,8 +240,10 @@ pub fn evaluate(expr: &Expr, scope: &Scope) -> Value {
                     std::process::exit(70);
                 }
 
-                let function_scope =
-                    Scope::new(HashMap::new(), Some(Rc::new(RefCell::new(function_scope.clone()))));
+                let function_scope = Scope::new(
+                    HashMap::new(),
+                    Some(Rc::new(RefCell::new(function_scope.clone()))),
+                );
 
                 let expr = expr.borrow();
 
@@ -254,7 +253,12 @@ pub fn evaluate(expr: &Expr, scope: &Scope) -> Value {
                     function_scope.define(arg.clone(), value);
                 }
 
-                evaluate(&expr, &function_scope)
+                let value = evaluate(&expr, &function_scope);
+
+                match value {
+                    Value::Return(value) => *value,
+                    value => value,
+                }
             };
 
             let closure = Rc::new(closure);

@@ -1,13 +1,13 @@
-fun returnArg(arg) {
-  return arg;
+var count = 4;
+
+fun tick() {
+  if (count > 0) {
+    print count;
+    count = count - 1;
+    return false;
+  }
+  print "Blast off!";
+  return true;
 }
 
-fun returnFunCallWithArg(func, arg) {
-  return returnArg(func)(arg);
-}
-
-fun printArg(arg) {
-  print arg;
-}
-
-returnFunCallWithArg(printArg, "foo");
+while (!tick()) {}
